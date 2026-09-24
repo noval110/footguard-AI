@@ -1,0 +1,46 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+build/
+.npm/
+*.log
+
+# Go
+bin/
+tmp/
+
+# Runtime uploads
+uploads/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local database / dumps
+*.sqlite
+*.sqlite3
+*.db
+
+# Postman local data
+.postman/local/
+
+# Local AI artifacts
+ai-service/app/main_backup.py
+ai-service/prediction_result.png
+ai-service/temp-wound-dataset

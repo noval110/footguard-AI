@@ -1,0 +1,1 @@
+"""FootGuard AI service tests."""
