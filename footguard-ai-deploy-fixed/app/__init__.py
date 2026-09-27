@@ -1,0 +1,1 @@
+"""FootGuard image analysis service."""
