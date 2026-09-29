@@ -41,6 +41,7 @@ services:
       AI_SERVICE_URL: "http://ai-service:8000"
       UPLOAD_DIR: "/app/uploads"
       AI_MODEL_VERSION: "best_model.pth"
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     volumes:
       - backend-uploads:/app/uploads
     networks:
@@ -52,6 +53,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: ${DOMAIN_URL}
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     container_name: footguard-frontend
     restart: always
     networks:

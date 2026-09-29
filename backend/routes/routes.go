@@ -54,6 +54,7 @@ func New(store *repositories.Store, auth *services.Auth, frontendOrigin, aiServi
 	api := e.Group("/api")
 	api.POST("/auth/register", h.Register)
 	api.POST("/auth/login", h.Login)
+	api.POST("/auth/google", h.GoogleLogin)
 	authed := api.Group("", appmiddleware.RequireAuth(store, auth))
 	authed.GET("/profile", h.Profile)
 	patient := authed.Group("", appmiddleware.RequireRole("patient"))

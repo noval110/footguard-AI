@@ -28,7 +28,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer pool.Close()
-	e := routes.New(repositories.New(pool), services.NewAuth(cfg.JWTSecret), cfg.FrontendOrigin, cfg.AIServiceURL, cfg.UploadDir, cfg.AIModelVersion)
+	e := routes.New(repositories.New(pool), services.NewAuth(cfg.JWTSecret, cfg.GoogleClientID), cfg.FrontendOrigin, cfg.AIServiceURL, cfg.UploadDir, cfg.AIModelVersion)
 	server := &http.Server{Addr: ":" + cfg.Port, Handler: e, ReadHeaderTimeout: 10 * time.Second, ReadTimeout: 20 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second}
 	go func() {
 		log.Printf("FootGuard API listening on :%s", cfg.Port)

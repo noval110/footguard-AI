@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { getProfile, login } from '../api/auth'
+import { getProfile, login, loginWithGoogle } from '../api/auth'
 import { ApiError, errorText, tokenStore } from '../api/client'
 import type { User } from '../api/types'
 import { AuthContext } from './context'
@@ -29,5 +29,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     catch (error) { signOut(); throw error }
   }
   const signIn = async (email: string, password: string) => completeAuth(await login(email, password))
-  return <AuthContext.Provider value={{ user, loading, sessionError, retrySession, signIn, signOut }}>{children}</AuthContext.Provider>
+  const signInWithGoogle = async (credential: string) => completeAuth(await loginWithGoogle(credential))
+  return <AuthContext.Provider value={{ user, loading, sessionError, retrySession, signIn, signInWithGoogle, signOut }}>{children}</AuthContext.Provider>
 }

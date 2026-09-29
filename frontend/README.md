@@ -4,8 +4,9 @@ Responsive React, Vite, TypeScript, Tailwind CSS, and React Router interface for
 
 ## Run with the backend
 
-1. Set up PostgreSQL, apply migrations `001` and `002`, and start the backend as described in `../backend/README.md`.
+1. Set up PostgreSQL, apply migrations `001`, `002`, and `003`, and start the backend as described in `../backend/README.md`.
 2. In this directory, copy `.env.example` to `.env` and set `VITE_API_URL` to the backend origin. Its default example is `http://localhost:8080`.
+   Set `VITE_GOOGLE_CLIENT_ID` to the same Google web OAuth client ID used by the backend's `GOOGLE_CLIENT_ID` to show Sign in with Google.
 3. Run `npm install` if dependencies are missing, then `npm run dev`. Vite normally serves `http://localhost:5173`, which matches the backend's default `FRONTEND_ORIGIN`. If you choose another frontend port, set `FRONTEND_ORIGIN` on the backend to that exact origin.
 4. Run `npm run build` and `npm run lint` for verification.
 
@@ -14,6 +15,8 @@ The backend must be running for registration, login, patient data, examinations,
 ## Vercel deployment
 
 Set the Vercel project's Root Directory to `frontend`, with `dist` as the output directory. The `vercel.json` in this directory rewrites direct requests for React Router paths such as `/login` and `/provider/dashboard` to `index.html`, so refresh and direct links load the app. A matching config at the repository root covers projects configured with that root directory instead. Redeploy after changing the configuration.
+
+For Google Sign-In, add the deployed frontend origin (for example, `https://footguard-ai.vercel.app`) and the local development origin to the Google web OAuth client's **Authorized JavaScript origins**. Configure `VITE_GOOGLE_CLIENT_ID` in the Vercel project and `GOOGLE_CLIENT_ID` in the deployed Go backend with the same client ID, then rebuild/redeploy both. The popup callback sends the Google credential to the Go API; no Google client secret or redirect URI is used by this flow. Apply backend migration `003_google_identity.sql` before enabling the updated backend. For Docker Compose, also set `GOOGLE_CLIENT_ID` in the root `.env`; the build passes it to Vite and the backend container.
 
 ## Connected routes
 

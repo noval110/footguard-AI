@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -22,10 +23,11 @@ type Handler struct {
 	AIClient       *http.Client
 	UploadDir      string
 	AIModelVersion string
+	GoogleVerifier func(context.Context, string) (services.GoogleIdentity, error)
 }
 
 func New(store *repositories.Store, auth *services.Auth, aiServiceURL string) *Handler {
-	return &Handler{Store: store, Auth: auth, AIServiceURL: strings.TrimRight(aiServiceURL, "/"), AIClient: &http.Client{Timeout: 20 * time.Second}, UploadDir: "uploads", AIModelVersion: "best_model.pth"}
+	return &Handler{Store: store, Auth: auth, AIServiceURL: strings.TrimRight(aiServiceURL, "/"), AIClient: &http.Client{Timeout: 20 * time.Second}, UploadDir: "uploads", AIModelVersion: "best_model.pth", GoogleVerifier: auth.VerifyGoogle}
 }
 
 func success(c echo.Context, status int, data any) error {

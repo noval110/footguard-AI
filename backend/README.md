@@ -23,6 +23,7 @@ From `C:\footguard\backend`:
    ```powershell
    psql -h localhost -U footguard -d footguard -v ON_ERROR_STOP=1 -f migrations/001_init.sql
    psql -h localhost -U footguard -d footguard -v ON_ERROR_STOP=1 -f migrations/002_ai_persistence.sql
+   psql -h localhost -U footguard -d footguard -v ON_ERROR_STOP=1 -f migrations/003_google_identity.sql
    ```
 
 3. Copy `.env.example` to `.env` locally and set a real database password and a random JWT secret of at least 32 characters. Do not commit `.env`.
@@ -47,6 +48,7 @@ The health endpoint is `GET http://localhost:8080/health`.
 | `AI_SERVICE_URL` | Base URL of the local FastAPI service; defaults to `http://127.0.0.1:8000` |
 | `UPLOAD_DIR` | Local image storage root; defaults to `uploads` relative to the backend process directory |
 | `AI_MODEL_VERSION` | Version label stored with each visual result; defaults to `best_model.pth` |
+| `GOOGLE_CLIENT_ID` | Google web OAuth client ID used to verify Google ID tokens; email/password login still works when unset |
 | `PROVIDER_PASSWORD` | Only used by the provider provisioning command below |
 
 Public registration creates patient accounts only. Provision a provider through the local CLI after setting `DATABASE_URL` and `PROVIDER_PASSWORD` in the shell:
@@ -55,13 +57,19 @@ Public registration creates patient accounts only. Provision a provider through 
 go run ./cmd/create-provider --name "Dr Maya" --email "maya@example.com"
 ```
 
+### Google Sign-In
+
+Apply `migrations/003_google_identity.sql` to each existing database before deploying the updated backend. Docker's `/docker-entrypoint-initdb.d` scripts run only when the PostgreSQL volume is first created, so an existing Compose database also needs this one-time migration. Do not recreate the volume to apply it.
+
+Set `GOOGLE_CLIENT_ID` to the same Google **Web application** OAuth client ID used by the frontend. `POST /api/auth/google` accepts `{"credential":"<Google ID token>"}` and returns the same `{user, token}` data shape as password login. The server verifies Google's signature, audience, issuer, expiration, and `email_verified` claim before using `sub` and email. Existing accounts retain their stored role and password hash; new Google accounts are patients with an unusable random password hash. Missing Google configuration disables only this endpoint.
+
 ## API
 
 All success responses use `{ "success": true, "data": ... }`. Errors use `{ "success": false, "message": "..." }`. Private endpoints require `Authorization: Bearer <token>`.
 
 | Role | Endpoints |
 | --- | --- |
-| Public | `POST /api/auth/register`, `POST /api/auth/login`, `GET /health` |
+| Public | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/google`, `GET /health` |
 | Authenticated | `GET /api/profile` |
 | Patient | `GET, PUT /api/patients/me`; `POST /api/assessments`; `GET /api/assessments/latest`; `POST, GET /api/examinations`; `POST /api/examinations/:id/analyze`; `POST /api/examinations/analyze` (legacy preview); `GET /api/examinations/:id`; `POST /api/examinations/:id/images` (legacy URL metadata) |
 | Patient or provider | `GET /api/examinations/:id/ai-results`; `GET /api/examinations/:id/risk-result`; `GET /api/uploads/:kind/:name` |
@@ -88,6 +96,8 @@ Patient access to examination resources and stored images is limited to their ow
 go test ./...
 go vet ./...
 ```
+
+The Google/password database integration test runs when `FOOTGUARD_TEST_DATABASE_URL` points to an isolated database with migrations `001` through `003` applied. It is skipped when that variable is unset. The test substitutes verified Google claims, so a real Google browser sign-in must also be checked after deployment.
 
 The initial migration was applied successfully to an isolated PostgreSQL 18 database during implementation. A live API smoke test completed the patient and provider sequence and checked unauthorized access. Tests cover password/JWT behavior, protected routes, CORS, and JSON errors.
 

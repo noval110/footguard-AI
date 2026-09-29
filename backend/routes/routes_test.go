@@ -3,6 +3,7 @@ package routes
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/noval110/footguard/backend/services"
@@ -33,5 +34,12 @@ func TestProtectedRouteAndCORS(t *testing.T) {
 	e.ServeHTTP(unknown, httptest.NewRequest(http.MethodGet, "/missing", nil))
 	if unknown.Code != http.StatusNotFound || unknown.Body.String() == "" {
 		t.Fatal("unhandled routes must return JSON errors")
+	}
+	google := httptest.NewRequest(http.MethodPost, "/api/auth/google", strings.NewReader(`{"credential":""}`))
+	google.Header.Set("Content-Type", "application/json")
+	googleResponse := httptest.NewRecorder()
+	e.ServeHTTP(googleResponse, google)
+	if googleResponse.Code != http.StatusUnauthorized {
+		t.Fatalf("invalid Google credential must return 401, got %d", googleResponse.Code)
 	}
 }

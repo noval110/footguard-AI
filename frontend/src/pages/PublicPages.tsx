@@ -7,6 +7,8 @@ import { register } from '../api/auth'
 import { ApiError, errorText } from '../api/client'
 import { useAuth } from '../auth/useAuth'
 import { LoadingState } from '../components/Feedback'
+import { GoogleSignInButton } from '../components/GoogleSignInButton'
+import type { User } from '../api/types'
 
 export { Landing } from './LandingPage'
 
@@ -14,13 +16,18 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const navigate = useNavigate()
   const location = useLocation()
   const routeState = location.state as { from?: string; registered?: boolean; role?: 'patient' | 'provider' } | null
-  const { user, loading: sessionLoading, signIn, signOut } = useAuth()
+  const { user, loading: sessionLoading, signIn, signInWithGoogle } = useAuth()
   const [role, setRole] = useState<'patient' | 'provider'>(routeState?.role === 'provider' ? 'provider' : 'patient')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   if (sessionLoading) return <div className="auth-loading"><LoadingState label="Memeriksa sesi Anda..." /></div>
   if (user) return <Navigate to={user.role === 'provider' ? '/provider/dashboard' : '/patient/dashboard'} replace />
+  function redirectAuthenticated(profile: User) {
+    const target = profile.role === 'provider' ? '/provider/dashboard' : '/patient/dashboard'
+    const requested = routeState?.from
+    navigate(requested?.startsWith(`/${profile.role}/`) ? requested : target, { replace: true })
+  }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submitting) return
@@ -38,16 +45,16 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
         navigate('/login', { replace: true, state: { registered: true, role: 'patient' } })
       } else {
         const profile = await signIn(email, password)
-        if (profile.role !== role) {
-          signOut()
-          setError(profile.role === 'provider' ? 'Akun ini terdaftar sebagai tenaga kesehatan. Pilih akses tenaga kesehatan.' : 'Akun ini terdaftar sebagai pasien. Pilih akses pasien.')
-          return
-        }
-        const target = profile.role === 'provider' ? '/provider/dashboard' : '/patient/dashboard'
-        const requested = routeState?.from
-        navigate(requested?.startsWith(`/${profile.role}/`) ? requested : target, { replace: true })
+        redirectAuthenticated(profile)
       }
     } catch (err) { setError(login && err instanceof ApiError && err.status === 401 ? 'Email atau kata sandi tidak sesuai.' : errorText(err)) }
+    finally { setSubmitting(false) }
+  }
+  async function submitGoogle(credential: string) {
+    if (submitting) return
+    setSubmitting(true); setError('')
+    try { redirectAuthenticated(await signInWithGoogle(credential)) }
+    catch (err) { setError(err instanceof ApiError && err.status === 401 ? 'Login Google gagal. Periksa akun Google Anda dan coba lagi.' : errorText(err)) }
     finally { setSubmitting(false) }
   }
   const login = mode === 'login'
@@ -78,6 +85,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             {error && <p className="form-error" id="auth-error" role="alert">{error}</p>}
             <button className="button fresh-auth-submit" type="submit" disabled={submitting}>{submitting ? <><LoaderCircle className="spin" size={17} />Memproses...</> : <>{login ? `Masuk sebagai ${patient ? 'Pasien' : 'Tenaga Kesehatan'}` : 'Daftar sebagai Pasien'}<ArrowRight size={17} /></>}</button>
           </form>
+          {login && import.meta.env.VITE_GOOGLE_CLIENT_ID && <div className="fresh-google-auth"><div className="fresh-auth-divider"><span>atau lanjutkan dengan</span></div><GoogleSignInButton onCredential={submitGoogle} disabled={submitting} />{!patient && <small>Akun Google baru mendapat akses pasien. Akses tenaga kesehatan hanya untuk akun yang sudah terdaftar.</small>}</div>}
           <p className="fresh-auth-switch">{login ? 'Belum punya akun?' : 'Sudah punya akun?'} <Link to={login ? '/register' : '/login'} state={{ role }}>{login ? 'Daftar di sini' : 'Masuk di sini'}</Link></p>
         </>}
         <div className="fresh-auth-assurance"><ShieldCheck size={17} /><p>Akses sesuai peran akun.<br />Catatan pemeriksaan untuk mendukung perawatan Anda.</p></div>

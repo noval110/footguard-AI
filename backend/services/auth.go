@@ -14,9 +14,18 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-type Auth struct{ Secret []byte }
+type Auth struct {
+	Secret         []byte
+	GoogleClientID string
+}
 
-func NewAuth(secret string) *Auth { return &Auth{Secret: []byte(secret)} }
+func NewAuth(secret string, googleClientID ...string) *Auth {
+	auth := &Auth{Secret: []byte(secret)}
+	if len(googleClientID) > 0 {
+		auth.GoogleClientID = googleClientID[0]
+	}
+	return auth
+}
 
 func (a *Auth) Hash(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

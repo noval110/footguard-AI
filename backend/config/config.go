@@ -16,6 +16,7 @@ type Config struct {
 	AIServiceURL   string
 	UploadDir      string
 	AIModelVersion string
+	GoogleClientID string
 }
 
 func Load() (Config, error) {
@@ -28,6 +29,7 @@ func Load() (Config, error) {
 		AIServiceURL:   strings.TrimSpace(os.Getenv("AI_SERVICE_URL")),
 		UploadDir:      strings.TrimSpace(os.Getenv("UPLOAD_DIR")),
 		AIModelVersion: strings.TrimSpace(os.Getenv("AI_MODEL_VERSION")),
+		GoogleClientID: strings.TrimSpace(os.Getenv("GOOGLE_CLIENT_ID")),
 	}
 	if c.DatabaseURL == "" || c.JWTSecret == "" {
 		return Config{}, errors.New("DATABASE_URL and JWT_SECRET are required")
