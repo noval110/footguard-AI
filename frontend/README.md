@@ -11,6 +11,10 @@ Responsive React, Vite, TypeScript, Tailwind CSS, and React Router interface for
 
 The backend must be running for registration, login, patient data, examinations, risk results, and reviews. Start the FastAPI service at the backend's `AI_SERVICE_URL` before using Analyze. API failures are shown in Indonesian with retry or correction guidance.
 
+## Vercel deployment
+
+Set the Vercel project's Root Directory to `frontend`, with `dist` as the output directory. The `vercel.json` in this directory rewrites direct requests for React Router paths such as `/login` and `/provider/dashboard` to `index.html`, so refresh and direct links load the app. A matching config at the repository root covers projects configured with that root directory instead. Redeploy after changing the configuration.
+
 ## Connected routes
 
 - Public: `/`, `/login`, `/register`
