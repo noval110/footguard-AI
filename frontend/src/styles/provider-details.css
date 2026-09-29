@@ -1,0 +1,173 @@
+/* Shared examination card and provider detail pages. */
+.fresh-shell .examination-card {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  padding: 22px;
+}
+
+.fresh-shell .examination-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fresh-shell .examination-card-top .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+}
+
+.fresh-shell .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f5f0f2;
+  color: #755868;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.fresh-shell .status-badge .status-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.fresh-shell .status-completed { background: #eef5f1; color: #32715b; }
+.fresh-shell .status-reviewed { background: #f2e9ee; color: #873b57; }
+
+.fresh-shell .examination-card-body {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 22px;
+  min-width: 0;
+}
+
+.fresh-shell .examination-thumbs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.fresh-shell .examination-thumbs .foot-image {
+  width: 100%;
+  min-width: 0;
+  min-height: 145px;
+  border-radius: 9px;
+}
+
+.fresh-shell .examination-thumbs .foot-image img { height: 145px; }
+.fresh-shell .examination-thumbs .foot-image span { font-size: 10px; padding: 6px 4px; }
+
+.fresh-shell .examination-card-detail {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.fresh-shell .examination-card-detail h3 {
+  margin: 0;
+  color: #26364c;
+  font-size: 18px;
+}
+
+.fresh-shell .examination-card-detail .visual-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  color: #657488;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.fresh-shell .visual-summary svg { flex: none; margin-top: 2px; }
+.fresh-shell .examination-tags { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.fresh-shell .examination-tags > span { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; color: #896771; font-size: 11px; }
+.fresh-shell .examination-tags b { color: #4b5c70; font-weight: 600; }
+.fresh-shell .examination-card > .inline-link { justify-self: start; }
+
+.fresh-shell .provider-patient-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 230px) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px 32px;
+}
+
+.fresh-shell .provider-patient-summary .eyebrow,
+.fresh-shell .provider-patient-latest .eyebrow,
+.fresh-shell .provider-review-summary .eyebrow { display: block; margin-bottom: 8px; }
+
+.fresh-shell .provider-patient-summary h2,
+.fresh-shell .provider-patient-latest h2,
+.fresh-shell .provider-review-summary h2,
+.fresh-shell .provider-visual h2,
+.fresh-shell .provider-review-grid h2 {
+  margin: 0;
+  color: #26364c;
+  font-size: clamp(19px, 2vw, 23px);
+  line-height: 1.3;
+}
+
+.fresh-shell .provider-patient-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.fresh-shell .provider-patient-facts > div { display: grid; align-content: start; gap: 7px; min-width: 0; }
+.fresh-shell .provider-patient-facts span,
+.fresh-shell .provider-review-summary > div:last-child > span { color: #896771; font-size: 11px; }
+.fresh-shell .provider-patient-facts strong { color: #26364c; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.fresh-shell .provider-patient-latest { margin-top: 30px; }
+.fresh-shell .provider-patient-latest > .section-title-row { margin-bottom: 17px; }
+.fresh-shell .provider-patient-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.fresh-shell .provider-patient-columns .card { min-width: 0; }
+.fresh-shell .provider-patient-columns h3 { margin: 10px 0; overflow-wrap: anywhere; }
+.fresh-shell .provider-patient-columns p { margin: 10px 0 0; overflow-wrap: anywhere; }
+
+.fresh-shell .provider-review-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  gap: 25px;
+}
+
+.fresh-shell .provider-review-summary p { margin: 10px 0 0; overflow-wrap: anywhere; }
+.fresh-shell .provider-review-summary > div:last-child { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: start; align-items: center; gap: 10px 14px; }
+.fresh-shell .provider-review-summary > div:last-child > :is(strong,.badge) { justify-self: end; text-align: right; }
+.fresh-shell .provider-visual { margin-top: 18px; }
+.fresh-shell .provider-visual h2 { margin: 0 0 17px; }
+.fresh-shell .provider-review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 18px; }
+.fresh-shell .provider-review-grid > .card { min-width: 0; }
+.fresh-shell .provider-review-grid h2 { margin-bottom: 16px; }
+.fresh-shell .provider-review-grid p { overflow-wrap: anywhere; }
+.fresh-shell .provider-review-form-area { margin-top: 18px; }
+.fresh-shell .provider-review-form-area .card { max-width: 820px; }
+
+@media (max-width: 1050px) {
+  .fresh-shell .provider-patient-summary { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .fresh-shell .provider-patient-facts { grid-template-columns: 1fr; gap: 13px; }
+  .fresh-shell .provider-patient-facts > div { padding-top: 11px; border-top: 1px solid #f0e9eb; }
+  .fresh-shell .provider-review-summary,
+  .fresh-shell .provider-review-grid,
+  .fresh-shell .provider-patient-columns,
+  .fresh-shell .examination-card-body { grid-template-columns: 1fr; }
+  .fresh-shell .examination-thumbs { max-width: 340px; }
+}
