@@ -1,15 +1,33 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowRight, Search, ShieldCheck } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowRight,
+  ArrowUpDown,
+  Bell,
+  Calendar,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Eye,
+  ClipboardCheck,
+  Search,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from 'lucide-react'
 import { errorText } from '../api/client'
 import { createRiskResult, getProviderExamination, listProviderPatients, saveMedicalReview } from '../api/provider'
 import type { ExaminationDetail, ProviderPatient, ReviewStatus, RiskCategory } from '../api/types'
 import { ErrorState, LoadingState } from '../components/Feedback'
 import { EmptyState, PageHeader, ReviewBadge, RiskBadge } from '../components/UI'
+import { useAuth } from '../auth/useAuth'
 import { useResource } from '../hooks/useResource'
 import { dateLabel, examStatusLabel } from '../utils/format'
 import { VisualAnalysis } from '../components/VisualAnalysis'
-import { ExaminationCard, MetricCard } from '../components/ExaminationUI'
+import { ExaminationCard } from '../components/ExaminationUI'
 import { visualSummary } from '../utils/examination'
 
 const factors = [
@@ -17,6 +35,7 @@ const factors = [
   ['foot_deformity', 'Deformitas kaki'], ['previous_ulcer', 'Riwayat ulkus'],
   ['previous_amputation', 'Riwayat amputasi'], ['kidney_failure', 'Gagal ginjal / ESRD'],
 ] as const
+
 function age(birth: string | null) {
   if (!birth) return 'Belum diisi'
   const born = new Date(birth)
@@ -24,22 +43,646 @@ function age(birth: string | null) {
   const years = today.getFullYear() - born.getFullYear() - (today.getMonth() < born.getMonth() || (today.getMonth() === born.getMonth() && today.getDate() < born.getDate()) ? 1 : 0)
   return `${years} th`
 }
+
+function getDoctorInitials(name?: string) {
+  if (!name) return 'DR'
+  const clean = name.replace(/^Dr\.\s*/i, '').replace(/^dr\.\s*/i, '').trim()
+  const parts = clean.split(' ').filter(Boolean)
+  if (parts.length === 0) return 'DR'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[1][0]).toUpperCase()
+}
+
+function getMaxConfidence(detail?: ExaminationDetail): number | null {
+  if (!detail || !detail.ai_results || detail.ai_results.length === 0) return null
+  const confidences = detail.ai_results.map(r => r.confidence || 0)
+  const max = Math.max(...confidences)
+  return max > 0 ? Math.round(max * 100) : null
+}
+
 const latestStatus = (item: ProviderPatient) => item.latest_review ? <ReviewBadge value={item.latest_review.review_status} /> : <span>Belum direview</span>
 
+
 export function ProviderDashboard() {
+  const { user } = useAuth()
   const { value, loading, error, reload } = useResource(async () => {
     const patients = await listProviderPatients()
-    const queue = patients.filter(item => item.latest_examination && !item.latest_review).slice(0, 6)
-    const details = await Promise.all(queue.map(item => getProviderExamination(item.latest_examination!.id)))
-    return { patients, queue: queue.map((item, index) => ({ item, detail: details[index] })) }
+    // Priority triage queue: patients with latest examination needing review
+    // Sorted by clinical priority: high risk first, then moderate, then low
+    const riskPriority: Record<string, number> = { high: 3, moderate: 2, low: 1 }
+    const pendingQueue = patients
+      .filter(item => item.latest_examination && !item.latest_review)
+      .sort((a, b) => {
+        const rA = a.latest_risk_result?.risk_category ? riskPriority[a.latest_risk_result.risk_category] : 0
+        const rB = b.latest_risk_result?.risk_category ? riskPriority[b.latest_risk_result.risk_category] : 0
+        if (rB !== rA) return rB - rA
+        const dA = a.latest_examination ? new Date(a.latest_examination.examined_at).getTime() : 0
+        const dB = b.latest_examination ? new Date(b.latest_examination.examined_at).getTime() : 0
+        return dB - dA
+      })
+      .slice(0, 8)
+
+    const details = await Promise.all(
+      pendingQueue.map(item => getProviderExamination(item.latest_examination!.id))
+    )
+    return {
+      patients,
+      queue: pendingQueue.map((item, index) => ({ item, detail: details[index] })),
+    }
   })
-  if (loading) return <LoadingState label="Memuat dashboard tenaga kesehatan..." />
+
+  // Search, filter & sorting states for Section 4
+  const [search, setSearch] = useState('')
+  const [filterRisk, setFilterRisk] = useState<string>('all')
+  const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<'name' | 'date' | 'risk'>('date')
+  const [sortAsc, setSortAsc] = useState<boolean>(false)
+
+  // Responsive collapsible state for Tablet / Mobile
+  const [triageCollapsed, setTriageCollapsed] = useState(false)
+  const [directoryCollapsed, setDirectoryCollapsed] = useState(false)
+
+  if (loading) return <LoadingState label="Memuat dashboard tenaga kesehatan..." variant="dashboard" />
   if (error || !value) return <ErrorState message={error || 'Dashboard belum tersedia.'} retry={reload} />
+
+  // Computations for KPI
+  const totalPatients = value.patients.length
   const exams = value.patients.filter(item => item.latest_examination)
   const needsReview = exams.filter(item => !item.latest_review)
-  const reviewed = exams.filter(item => !!item.latest_review)
-  const newExams = exams.filter(item => item.latest_examination?.status === 'pending')
-  return <><section className="dashboard-welcome provider-welcome"><div><span className="eyebrow">RUANG TENAGA KESEHATAN</span><h1>Tinjauan Pemeriksaan</h1><p>Mulai dari pemeriksaan yang membutuhkan perhatian Anda.</p></div><div className="dashboard-welcome-action"><span>Antrean saat ini</span><strong>{needsReview.length} perlu ditinjau</strong><Link className="button button-light" to="#reviews">Lihat Antrean <ArrowRight size={16} /></Link></div></section><section className="provider-metrics"><MetricCard label="Perlu ditinjau" value={String(needsReview.length)} description="Pemeriksaan terakhir tanpa review" /><MetricCard label="Pemeriksaan baru" value={String(newExams.length)} description="Pemeriksaan yang masih diproses" /><MetricCard label="Review tercatat" value={String(reviewed.length)} description="Pada pemeriksaan terakhir pasien" /></section><section className="provider-worklist" id="reviews"><div className="section-title-row"><div><span className="eyebrow">PRIORITAS KERJA</span><h2>Perlu Ditinjau</h2><p className="muted">Temuan AI membantu melihat foto. Keputusan klinis tetap dicatat oleh tenaga kesehatan.</p></div><Link className="inline-link" to="/provider/patients">Lihat semua pasien <ArrowRight size={16} /></Link></div>{value.queue.length ? <div className="provider-queue-list">{value.queue.map(({ item, detail }) => <div className="provider-queue-item" key={item.patient.id}><div className="provider-queue-person"><span className="mini-avatar">{item.name.split(' ').slice(0, 2).map(part => part[0]).join('')}</span><div><strong>{item.name}</strong><small>{item.email}</small></div></div><ExaminationCard detail={detail} provider /></div>)}</div> : <div className="card"><EmptyState text="Belum ada pemeriksaan yang menunggu review." /></div>}</section><section className="card provider-context"><div><span className="eyebrow">CATATAN KLINIS</span><h2>Data visual dan faktor klinis saling melengkapi.</h2><p>Periksa foto asli, visualisasi AI, informasi kesehatan pasien, lalu catat penilaian risiko dan review secara terpisah.</p></div><ShieldCheck size={41} strokeWidth={1.3} /></section></>
+  const highRiskCases = value.patients.filter(p => p.latest_risk_result?.risk_category === 'high')
+  const completedAssessments = exams.filter(item => item.latest_review !== null)
+
+  // Doctor greeting calculations
+  const hour = new Date().getHours()
+  const timeGreeting = hour < 12 ? 'Selamat pagi' : hour < 18 ? 'Selamat siang' : 'Selamat malam'
+  const rawName = user?.name || 'Tenaga Kesehatan'
+  const doctorName = rawName
+  const doctorInitials = getDoctorInitials(user?.name)
+
+  // Filtered & sorted patients for Section 4
+  const filteredPatients = value.patients
+    .filter(item => {
+      const q = search.trim().toLowerCase()
+      const matchSearch =
+        !q ||
+        item.name.toLowerCase().includes(q) ||
+        item.email.toLowerCase().includes(q) ||
+        String(item.patient.id).includes(q)
+
+      const patientRisk = item.latest_risk_result?.risk_category || 'unassessed'
+      const matchRisk = filterRisk === 'all' || patientRisk === filterRisk
+
+      const reviewStatus = item.latest_review?.review_status || 'unreviewed'
+      const matchStatus = filterStatus === 'all' || reviewStatus === filterStatus
+
+      return matchSearch && matchRisk && matchStatus
+    })
+    .sort((a, b) => {
+      let cmp = 0
+      if (sortBy === 'name') {
+        cmp = a.name.localeCompare(b.name)
+      } else if (sortBy === 'risk') {
+        const riskRank: Record<string, number> = { high: 3, moderate: 2, low: 1 }
+        const rA = a.latest_risk_result?.risk_category ? riskRank[a.latest_risk_result.risk_category] : 0
+        const rB = b.latest_risk_result?.risk_category ? riskRank[b.latest_risk_result.risk_category] : 0
+        cmp = rA - rB
+      } else if (sortBy === 'date') {
+        const dA = a.latest_examination ? new Date(a.latest_examination.examined_at).getTime() : 0
+        const dB = b.latest_examination ? new Date(b.latest_examination.examined_at).getTime() : 0
+        cmp = dA - dB
+      }
+      return sortAsc ? cmp : -cmp
+    })
+
+  const toggleSort = (field: 'name' | 'date' | 'risk') => {
+    if (sortBy === field) {
+      setSortAsc(!sortAsc)
+    } else {
+      setSortBy(field)
+      setSortAsc(false)
+    }
+  }
+
+  return (
+    <div className="provider-command-layout">
+      {/* SECTION 1 — HEADER */}
+      <section className="provider-command-header" aria-label="Clinical Command Center Header">
+        <div className="provider-header-main">
+          <div className="provider-eyebrow-pill">
+            <span className="pulse-indicator" />
+            <span>DASHBOARD TENAGA KESEHATAN</span>
+          </div>
+          <h1 className="provider-header-title">{timeGreeting}, {doctorName}</h1>
+          <p className="provider-header-subtitle">
+            Tinjau kondisi kaki pasien, hasil pemeriksaan, dan catatan tindak lanjut.
+          </p>
+        </div>
+
+        <div className="provider-header-meta">
+          <a href="#triage" className="provider-notification-pill" title="Pemeriksaan menunggu review">
+            <Bell size={16} />
+            <span>{needsReview.length} belum ditinjau</span>
+            {needsReview.length > 0 && <span className="notification-counter">{needsReview.length}</span>}
+          </a>
+
+          <div className="provider-profile-capsule">
+            <div className="provider-avatar-circle">{doctorInitials}</div>
+            <div className="provider-profile-text">
+              <span className="provider-profile-name">{doctorName}</span>
+              <span className="provider-role-badge">
+                <ShieldCheck size={12} /> Tenaga Kesehatan
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 2 — CLINICAL KPI OVERVIEW */}
+      <section className="clinical-kpi-grid" aria-label="Clinical Key Performance Indicators">
+        {/* Card 1: Total Pasien */}
+        <div className="clinical-kpi-card">
+          <div className="kpi-card-header">
+            <span className="kpi-card-label">Total Pasien</span>
+            <div className="kpi-card-icon kpi-icon-teal">
+              <Users size={18} />
+            </div>
+          </div>
+          <div className="kpi-card-body">
+            <div className="kpi-card-number">{totalPatients}</div>
+          </div>
+          <div className="kpi-card-footer">
+            <span className="kpi-status-pill kpi-status-neutral">Aktif Terdaftar</span>
+            <span className="kpi-card-explanation">Pasien dalam daftar</span>
+          </div>
+        </div>
+
+        {/* Card 2: Pasien Risiko Tinggi */}
+        <div className="clinical-kpi-card">
+          <div className="kpi-card-header">
+            <span className="kpi-card-label">Pasien Risiko Tinggi</span>
+            <div className="kpi-card-icon kpi-icon-danger">
+              <AlertTriangle size={18} />
+            </div>
+          </div>
+          <div className="kpi-card-body">
+            <div className={`kpi-card-number ${highRiskCases.length > 0 ? 'danger' : ''}`}>
+              {highRiskCases.length}
+            </div>
+          </div>
+          <div className="kpi-card-footer">
+            <span className={`kpi-status-pill ${highRiskCases.length > 0 ? 'kpi-status-danger' : 'kpi-status-success'}`}>
+              {highRiskCases.length > 0 ? 'Perlu perhatian' : 'Tidak tercatat'}
+            </span>
+            <span className="kpi-card-explanation">Risiko komplikasi tinggi</span>
+          </div>
+        </div>
+
+        {/* Card 3: Belum Ditinjau */}
+        <div className="clinical-kpi-card">
+          <div className="kpi-card-header">
+            <span className="kpi-card-label">Belum Ditinjau</span>
+            <div className="kpi-card-icon kpi-icon-warning">
+              <Clock size={18} />
+            </div>
+          </div>
+          <div className="kpi-card-body">
+            <div className={`kpi-card-number ${needsReview.length > 0 ? 'warning' : ''}`}>
+              {needsReview.length}
+            </div>
+          </div>
+          <div className="kpi-card-footer">
+            <span className={`kpi-status-pill ${needsReview.length > 0 ? 'kpi-status-warning' : 'kpi-status-neutral'}`}>
+              {needsReview.length > 0 ? 'Perlu ditinjau' : 'Antrean Bersih'}
+            </span>
+            <span className="kpi-card-explanation">Menunggu validasi dokter</span>
+          </div>
+        </div>
+
+        {/* Card 4: Memiliki Catatan Review */}
+        <div className="clinical-kpi-card">
+          <div className="kpi-card-header">
+            <span className="kpi-card-label">Memiliki Catatan Review</span>
+            <div className="kpi-card-icon kpi-icon-success">
+              <CheckCircle2 size={18} />
+            </div>
+          </div>
+          <div className="kpi-card-body">
+            <div className="kpi-card-number">{completedAssessments.length}</div>
+          </div>
+          <div className="kpi-card-footer">
+            <span className="kpi-status-pill kpi-status-success">Terdokumentasi</span>
+            <span className="kpi-card-explanation">Review pemeriksaan terakhir</span>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 3 — PRIORITY TRIAGE QUEUE */}
+      <section className="priority-triage-card" id="triage" aria-label="Antrean Prioritas Review">
+        <div className="triage-header-row">
+          <div className="triage-title-group">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span className="eyebrow" style={{ margin: 0 }}>PRIORITAS KLINIS</span>
+              {value.queue.length > 0 && (
+                <span className="triage-urgency-badge">
+                  <ShieldAlert size={13} /> {value.queue.length} Kasus Perlu Ditinjau
+                </span>
+              )}
+            </div>
+            <h2>Antrean Prioritas Review</h2>
+            <p className="muted" style={{ margin: '4px 0 0', fontSize: '13px' }}>
+              Pemeriksaan pasien yang memerlukan validasi klinis tenaga kesehatan. Diurutkan berdasarkan tingkat risiko tertinggi.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="section-toggle-btn"
+            onClick={() => setTriageCollapsed(!triageCollapsed)}
+            aria-expanded={!triageCollapsed}
+          >
+            {triageCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            {triageCollapsed ? 'Buka Antrean' : 'Ciutkan Antrean'}
+          </button>
+        </div>
+
+        {!triageCollapsed && (
+          value.queue.length > 0 ? (
+            <div className="clinical-table-wrapper">
+              <table className="clinical-triage-table">
+                <thead>
+                  <tr>
+                    <th>Pasien</th>
+                    <th>Risiko</th>
+                    <th>Temuan Visual</th>
+                    <th>Status Review</th>
+                    <th>Pemeriksaan Terakhir</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {value.queue.map(({ item, detail }) => {
+                    const initials = getDoctorInitials(item.name)
+                    const finding = visualSummary(detail.ai_results)
+                    const hasUlcer = detail.ai_results.some(r => r.ulcer_detected === true)
+                    const maxConf = getMaxConfidence(detail)
+
+                    return (
+                      <tr key={item.patient.id}>
+                        <td data-label="Pasien">
+                          <div className="triage-patient-cell">
+                            <span className="patient-cell-avatar">{initials}</span>
+                            <div className="patient-cell-info">
+                              <span className="patient-cell-name">{item.name}</span>
+                              <span className="patient-cell-meta">
+                                {age(item.patient.birth_date)} · {item.email}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td data-label="Risiko">
+                          <RiskBadge value={item.latest_risk_result?.risk_category} />
+                        </td>
+                        <td data-label="Temuan Visual">
+                          <span className={`ai-finding-tag ${hasUlcer ? 'alert' : ''}`}>
+                            <Sparkles size={13} />
+                            <span>{finding}</span>
+                            {maxConf ? <small>({maxConf}%)</small> : null}
+                          </span>
+                        </td>
+                        <td data-label="Status Review">
+                          <ReviewBadge value={item.latest_review?.review_status} />
+                        </td>
+                        <td data-label="Pemeriksaan Terakhir">
+                          <span style={{ fontSize: '12px', color: 'var(--fg-text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                            <Calendar size={13} />
+                            {item.latest_examination ? dateLabel(item.latest_examination.examined_at) : 'Belum ada'}
+                          </span>
+                        </td>
+                        <td data-label="Aksi">
+                          <div className="triage-actions-cell">
+                            <Link
+                              to={`/provider/patients/${item.patient.id}`}
+                              className="button-link-subtle"
+                              title="Lihat Profil Pasien"
+                            >
+                              <Eye size={13} />
+                              <span>Lihat Pasien</span>
+                            </Link>
+                            {item.latest_examination && (
+                              <Link
+                                to={`/provider/examinations/${item.latest_examination.id}`}
+                                className="button-link-action"
+                                title="Tinjau Pemeriksaan Medis"
+                              >
+                                <ClipboardCheck size={13} />
+                                <span>Tinjau Pemeriksaan</span>
+                              </Link>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState text="Belum ada pemeriksaan dalam antrean review." />
+          )
+        )}
+      </section>
+
+      {/* SECTION 4 & 5 — WORKSPACE SPLIT LAYOUT */}
+      <div className="clinical-workspace-grid">
+        {/* SECTION 4 — PATIENT TABLE */}
+        <section className="patient-directory-card" aria-label="Patient Directory Table">
+          <div className="directory-header-row">
+            <div className="directory-title-group">
+              <span className="eyebrow" style={{ margin: 0 }}>DIREKTORI PASIEN</span>
+              <h3>Daftar Pasien Terpantau</h3>
+              <p className="muted" style={{ margin: '4px 0 0', fontSize: '13px' }}>
+                Total {filteredPatients.length} dari {totalPatients} pasien terdaftar
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className="section-toggle-btn"
+              onClick={() => setDirectoryCollapsed(!directoryCollapsed)}
+              aria-expanded={!directoryCollapsed}
+            >
+              {directoryCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+              {directoryCollapsed ? 'Buka Tabel' : 'Ciutkan Tabel'}
+            </button>
+          </div>
+
+          {!directoryCollapsed && (
+            <>
+              {/* Features: Search, Filter Risk, Filter Status, Sorting */}
+              <div className="directory-toolbar">
+                <div className="directory-search-box">
+                  <Search size={16} style={{ color: 'var(--fg-text-muted)' }} />
+                  <input
+                    type="search"
+                    placeholder="Cari nama, email, atau ID pasien..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    aria-label="Cari pasien"
+                  />
+                </div>
+
+                <div className="directory-filters-group">
+                  <label className="filter-select-wrapper">
+                    <span>Risiko:</span>
+                    <select
+                      value={filterRisk}
+                      onChange={e => setFilterRisk(e.target.value)}
+                      aria-label="Filter kategori risiko"
+                    >
+                      <option value="all">Semua Risiko</option>
+                      <option value="high">Tinggi (High)</option>
+                      <option value="moderate">Sedang (Moderate)</option>
+                      <option value="low">Rendah (Low)</option>
+                      <option value="unassessed">Belum Dinilai</option>
+                    </select>
+                  </label>
+
+                  <label className="filter-select-wrapper">
+                    <span>Status:</span>
+                    <select
+                      value={filterStatus}
+                      onChange={e => setFilterStatus(e.target.value)}
+                      aria-label="Filter status review"
+                    >
+                      <option value="all">Semua Status</option>
+                      <option value="pending">Menunggu Review</option>
+                      <option value="approved">Disetujui</option>
+                      <option value="needs_followup">Perlu Tindak Lanjut</option>
+                      <option value="unreviewed">Belum Ditinjau</option>
+                    </select>
+                  </label>
+
+                  <label className="filter-select-wrapper">
+                    <span>Urutan:</span>
+                    <select
+                      value={`${sortBy}-${sortAsc ? 'asc' : 'desc'}`}
+                      onChange={e => {
+                        const [f, o] = e.target.value.split('-')
+                        setSortBy(f as 'name' | 'date' | 'risk')
+                        setSortAsc(o === 'asc')
+                      }}
+                      aria-label="Pilih pengurutan"
+                    >
+                      <option value="date-desc">Scan Terbaru</option>
+                      <option value="date-asc">Scan Terlama</option>
+                      <option value="risk-desc">Risiko Tertinggi</option>
+                      <option value="name-asc">Nama (A-Z)</option>
+                      <option value="name-desc">Nama (Z-A)</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              {filteredPatients.length > 0 ? (
+                <div className="clinical-table-wrapper">
+                  <table className="patient-directory-table">
+                    <thead>
+                      <tr>
+                        <th className="sortable-th" aria-sort={sortBy === 'name' ? sortAsc ? 'ascending' : 'descending' : 'none'}><button className="table-sort-button" type="button" onClick={() => toggleSort('name')}>
+                          <span className="sortable-th-inner">
+                            Nama Pasien <ArrowUpDown size={12} />
+                          </span></button>
+                        </th>
+                        <th className="sortable-th" aria-sort={sortBy === 'date' ? sortAsc ? 'ascending' : 'descending' : 'none'}><button className="table-sort-button" type="button" onClick={() => toggleSort('date')}>
+                          <span className="sortable-th-inner">
+                            Pemeriksaan Terakhir <ArrowUpDown size={12} />
+                          </span></button>
+                        </th>
+                        <th className="sortable-th" aria-sort={sortBy === 'risk' ? sortAsc ? 'ascending' : 'descending' : 'none'}><button className="table-sort-button" type="button" onClick={() => toggleSort('risk')}>
+                          <span className="sortable-th-inner">
+                            Kategori Risiko <ArrowUpDown size={12} />
+                          </span></button>
+                        </th>
+                        <th>Hasil Visual</th>
+                        <th>Review Klinis</th>
+                        <th style={{ textAlign: 'right' }}>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPatients.map(item => {
+                        const initials = getDoctorInitials(item.name)
+                        const exam = item.latest_examination
+                        const aiStatus = exam
+                          ? exam.status === 'completed' || exam.status === 'reviewed'
+                            ? 'Analisis AI Selesai'
+                            : 'Dalam Pemrosesan'
+                          : 'Belum Ada Scan'
+
+                        return (
+                          <tr key={item.patient.id}>
+                            <td data-label="Nama Pasien">
+                              <div className="triage-patient-cell">
+                                <span className="patient-cell-avatar">{initials}</span>
+                                <div className="patient-cell-info">
+                                  <span className="patient-cell-name">{item.name}</span>
+                                  <span className="patient-cell-meta">
+                                    {age(item.patient.birth_date)} · {item.email}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td data-label="Pemeriksaan Terakhir">
+                              <span style={{ fontSize: '12px', color: 'var(--fg-text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                                <Calendar size={13} />
+                                {exam ? dateLabel(exam.examined_at) : 'Belum ada'}
+                              </span>
+                            </td>
+
+                            <td data-label="Kategori Risiko">
+                              <RiskBadge value={item.latest_risk_result?.risk_category} />
+                            </td>
+
+                            <td data-label="Hasil Visual">
+                              <span className="ai-finding-tag" style={{ fontSize: '11px' }}>
+                                <Sparkles size={12} />
+                                {aiStatus}
+                              </span>
+                            </td>
+
+                            <td data-label="Review Klinis">
+                              <ReviewBadge value={item.latest_review?.review_status} />
+                            </td>
+
+                            <td data-label="Aksi" style={{ textAlign: 'right' }}>
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                {exam ? (
+                                  <Link
+                                    to={`/provider/examinations/${exam.id}`}
+                                    className="button-link-action"
+                                    style={{ padding: '5px 10px', fontSize: '11px' }}
+                                    title="Tinjau Pemeriksaan"
+                                  >
+                                    <span>Tinjau</span>
+                                    <ArrowRight size={12} />
+                                  </Link>
+                                ) : (
+                                  <Link
+                                    to={`/provider/patients/${item.patient.id}`}
+                                    className="button-link-subtle"
+                                    style={{ padding: '5px 10px', fontSize: '11px' }}
+                                    title="Lihat Profil Pasien"
+                                  >
+                                    <span>Profil</span>
+                                    <ArrowRight size={12} />
+                                  </Link>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <EmptyState text="Tidak ada pasien yang cocok dengan filter pencarian." />
+              )}
+            </>
+          )}
+        </section>
+
+        {/* SECTION 5 — CLINICAL REVIEW PANEL */}
+        <aside className="clinical-review-sidebar" aria-label="Clinical Review Panel">
+          <div className="review-panel-header">
+            <div className="review-panel-title-group">
+              <span className="eyebrow" style={{ margin: 0 }}>PANEL REVIEW CEPAT</span>
+              <h3>Pemeriksaan Belum Ditinjau</h3>
+            </div>
+            {value.queue.length > 0 && (
+              <span className="review-panel-count-pill">{value.queue.length} antrean</span>
+            )}
+          </div>
+
+          <p className="muted" style={{ fontSize: '12px', margin: 0 }}>
+            Pemeriksaan terbaru yang memerlukan validasi dokter dan penetapan risiko klinis.
+          </p>
+
+          <div className="review-cards-list">
+            {value.queue.length > 0 ? (
+              value.queue.slice(0, 5).map(({ item, detail }) => {
+                const initials = getDoctorInitials(item.name)
+                const maxConf = getMaxConfidence(detail)
+
+                return (
+                  <article className="review-card-item" key={item.patient.id}>
+                    <div className="review-card-top">
+                      <div className="review-card-patient">
+                        <span className="patient-cell-avatar">{initials}</span>
+                        <div>
+                          <strong className="review-card-patient-name">{item.name}</strong>
+                          <span style={{ display: 'block', fontSize: '10px', color: 'var(--fg-text-muted)' }}>
+                            ID #{item.patient.id} · {age(item.patient.birth_date)}
+                          </span>
+                        </div>
+                      </div>
+                      <RiskBadge value={item.latest_risk_result?.risk_category} />
+                    </div>
+
+                    <div className="review-card-details">
+                      <span className="review-detail-chip">
+                        <Calendar size={12} />
+                        {item.latest_examination ? dateLabel(item.latest_examination.examined_at) : 'Belum ada'}
+                      </span>
+                      {maxConf && (
+                        <span className="review-detail-chip ai-confidence-chip">
+                          <Sparkles size={12} />
+                          {maxConf}% Keyakinan AI
+                        </span>
+                      )}
+                    </div>
+
+                    {item.latest_examination && (
+                      <div className="review-card-action">
+                        <Link
+                          to={`/provider/examinations/${item.latest_examination.id}`}
+                          className="btn-review-now"
+                          title={`Tinjau pemeriksaan pasien ${item.name}`}
+                        >
+                          <span>Tinjau Pemeriksaan</span>
+                          <ArrowRight size={13} />
+                        </Link>
+                      </div>
+                    )}
+                  </article>
+                )
+              })
+            ) : (
+              <EmptyState text="Belum ada pemeriksaan yang menunggu review." />
+            )}
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--fg-border-subtle)', paddingTop: '14px' }}>
+            <Link to="/provider/patients" className="inline-link" style={{ fontSize: '12px' }}>
+              Lihat Seluruh Direktori Pasien <ArrowRight size={14} />
+            </Link>
+          </div>
+        </aside>
+      </div>
+
+      {/* Clinical Guidance Note */}
+      <section className="card provider-context" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <span className="eyebrow">STANDAR PRAKTIK KLINIS</span>
+          <h2 style={{ fontSize: '1.25rem', margin: '4px 0 8px' }}>Integrasi Hasil Visual AI & Faktor Klinis</h2>
+          <p className="muted" style={{ margin: 0, fontSize: '13px', maxWidth: '680px' }}>
+            Temuan visual AI berfungsi sebagai alat bantu skrining dan observasi foto kaki. Keputusan diagnostik, penetapan kategori risiko kaki diabetik, serta instruksi tata laksana klinis tetap merupakan wewenang mandiri dokter dan tenaga kesehatan.
+          </p>
+        </div>
+        <ShieldCheck size={40} strokeWidth={1.4} style={{ color: 'var(--fg-secondary)', flexShrink: 0 }} />
+      </section>
+    </div>
+  )
 }
 
 export function PatientListPage() {

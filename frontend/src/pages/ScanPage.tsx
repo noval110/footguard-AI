@@ -150,7 +150,7 @@ export function ScanPage() {
   }
   const currentError = analysisErrors[side]
 
-  return <>
+  return <div className="scan-page">
     <PageHeader eyebrow={`PEMERIKSAAN #${examId} · ${examStatusLabel[exam.examination.status]}`} title="Pemeriksaan Kaki Diabetik" description="Gunakan foto kaki dan informasi kesehatan untuk membantu pemantauan kondisi kaki Anda." />
     <div className="flow-card">
       <StepIndicator current={analyzingSide ? 3 : cameraOpen || files[side] ? 2 : 1} />
@@ -189,5 +189,5 @@ export function ScanPage() {
       <div className="flow-actions"><Link to="/patient/assessment" className="button button-secondary">Sebelumnya</Link><button className="button" type="button" onClick={() => navigate(`/patient/result/${examId}`)}>Lihat Pemeriksaan <ArrowRight size={16} /></button></div>
     </div>
     {cameraOpen && <div className="camera-dialog-backdrop" role="presentation"><section className="camera-dialog" role="dialog" aria-modal="true" aria-labelledby="camera-dialog-title"><header><div><span className="eyebrow">KAMERA PERANGKAT</span><h2 id="camera-dialog-title">Foto kaki {side === 'left' ? 'kiri' : 'kanan'}</h2></div><button type="button" className="camera-close" onClick={closeCamera} aria-label="Tutup kamera"><X size={21} /></button></header><div className="camera-live"><video ref={videoRef} autoPlay muted playsInline onLoadedMetadata={() => setCameraReady(true)} /><div className="camera-live-guide" aria-hidden="true"><span /><span /><span /><span /></div><p>Pastikan seluruh kaki terlihat dan gambar tidak buram.</p></div><footer><button type="button" className="button button-secondary" onClick={closeCamera}><X size={16} /> Batal</button><button type="button" className="button camera-shutter" onClick={capturePhoto} disabled={!cameraReady}><Camera size={17} /> {cameraReady ? 'Ambil Foto' : 'Menyiapkan kamera...'}</button></footer><button type="button" className="camera-retry" onClick={() => { closeCamera(); void openCamera() }}><RotateCcw size={14} /> Muat ulang kamera</button></section></div>}
-  </>
+  </div>
 }

@@ -8,6 +8,11 @@ import { ScanPage } from './pages/ScanPage'
 import { ProviderDashboard, PatientListPage, ProviderPatientPage, ExaminationPage } from './pages/ProviderPages'
 import './App.css'
 import './styles/integration.css'
+import './styles/dashboard.css'
+import './styles/app-refresh.css'
+import './styles/education.css'
+import './styles/loading.css'
+import './styles/scan.css'
 
 export default function App() {
   return <BrowserRouter><AuthProvider><Routes>
