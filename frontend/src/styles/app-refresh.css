@@ -90,13 +90,14 @@ body:has(.fresh-shell, .fg-auth) { min-width: 0; background: #fbf7f8; }
 .fresh-auth-form .field small { font-size: 11px; color: #6b7c8d; font-weight: 400; }
 .fg-auth .fresh-auth-submit { width: 100%; min-height: 48px; margin-top: 3px; justify-content: center; }
 .fresh-auth-switch { text-align: center; font-size: 12px; margin: 23px 0; color: #65758a; }
-.fresh-google-auth { margin-top: 22px; }
+.fresh-google-auth { margin-top: 25px; }
 .fresh-auth-divider { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; color: #896771; font-size: 11px; white-space: nowrap; }
 .fresh-auth-divider::before, .fresh-auth-divider::after { content: ''; height: 1px; flex: 1; background: #e9e0e3; }
-.google-signin-button { display: flex; justify-content: center; width: 100%; min-height: 44px; }
-.google-signin-button > div { width: 100%; }
+.google-signin-button { display: flex; flex-direction: column; align-items: center; width: 100%; min-height: 44px; }
+.google-signin-button > div { width: min(100%, 400px); min-height: 44px; margin-inline: auto; }
+.google-signin-button .form-error { width: 100%; margin-top: 10px; }
 .google-signin-button.is-disabled { opacity: .6; pointer-events: none; }
-.fresh-google-auth > small { display: block; margin-top: 12px; color: #896771; font-size: 11px; line-height: 1.6; }
+.fresh-google-auth > small { display: block; max-width: 400px; margin: 12px auto 0; color: #896771; font-size: 11px; line-height: 1.6; text-align: center; }
 .fresh-auth-switch a { color: #842843; font-weight: 700; margin-left: 4px; }
 .fresh-auth-assurance { display: flex; justify-content: center; align-items: center; gap: 10px; padding-top: 21px; border-top: 1px solid #ede7e8; color: #93707a; }
 .fresh-auth-assurance p { color: #896771; font-size: 11px; margin: 0; line-height: 1.7; }

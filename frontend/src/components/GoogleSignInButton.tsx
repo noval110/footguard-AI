@@ -3,7 +3,15 @@ import { useEffect, useRef, useState } from 'react'
 interface GoogleCredentialResponse { credential: string }
 interface GoogleIdentityAPI {
   initialize: (options: { client_id: string; callback: (response: GoogleCredentialResponse) => void }) => void
-  renderButton: (element: HTMLElement, options: { theme: string; size: string; width: number }) => void
+  renderButton: (element: HTMLElement, options: {
+    type: 'standard'
+    theme: 'outline'
+    size: 'large'
+    text: 'continue_with'
+    shape: 'pill'
+    width: number
+    locale: 'id'
+  }) => void
 }
 
 declare global {
@@ -41,16 +49,29 @@ export function GoogleSignInButton({ onCredential, disabled }: { onCredential: (
   useEffect(() => {
     if (!clientID) return
     let active = true
+    let observer: ResizeObserver | undefined
     loadGoogleScript().then(() => {
       if (!active || !button.current || !window.google?.accounts.id) return
+      const element = button.current
       window.google.accounts.id.initialize({ client_id: clientID, callback: response => {
         if (response.credential) callback.current(response.credential)
       } })
-      window.google.accounts.id.renderButton(button.current, {
-        theme: 'outline', size: 'large', width: Math.min(340, button.current.clientWidth),
-      })
+      let renderedWidth = 0
+      const render = () => {
+        const width = Math.min(400, Math.floor(element.clientWidth))
+        if (width < 1 || width === renderedWidth) return
+        renderedWidth = width
+        element.replaceChildren()
+        window.google?.accounts.id.renderButton(element, {
+          type: 'standard', theme: 'outline', size: 'large', text: 'continue_with',
+          shape: 'pill', width, locale: 'id',
+        })
+      }
+      observer = new ResizeObserver(render)
+      observer.observe(element)
+      render()
     }).catch(() => { if (active) setLoadError(true) })
-    return () => { active = false }
+    return () => { active = false; observer?.disconnect() }
   }, [clientID])
 
   if (!clientID) return null
