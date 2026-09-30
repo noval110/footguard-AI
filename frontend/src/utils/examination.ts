@@ -1,7 +1,7 @@
 import type { AIResult, ExaminationDetail } from '../api/types'
 
-export function latestPhoto(detail: ExaminationDetail, side: 'left' | 'right') {
-  return [...detail.foot_images].reverse().find(image => image.foot_side === side && image.image_type === 'photo')
+export function latestPhoto(detail: ExaminationDetail) {
+  return [...detail.foot_images].reverse().find(image => image.image_type === 'photo')
 }
 
 export function visualSummary(results: AIResult[]) {

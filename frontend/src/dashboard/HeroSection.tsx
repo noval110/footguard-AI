@@ -1,206 +1,102 @@
-import {
-  ArrowRight,
-  ShieldCheck,
-  Activity,
-  ScanLine
-} from "lucide-react";
+import { ArrowRight, ShieldCheck, Activity, ScanLine } from "lucide-react";
 
-
-
-export default function HeroSection(){
-
-
-return (
-
-<section
-className="
+export default function HeroSection() {
+  return (
+    <section
+      className="
 dashboard-welcome
 hero-section
 "
->
-
-
-<div className="hero-content">
-
-
-<div
-className="
+    >
+      <div className="hero-content">
+        <div
+          className="
 hero-badge
 "
->
+        >
+          <ShieldCheck size={16} />
+          AI Health Monitoring Active
+        </div>
 
-<ShieldCheck size={16}/>
+        <h1>Protect Every Step With Intelligent Foot Care</h1>
 
-AI Health Monitoring Active
+        <p>
+          FootGuard membantu melakukan pemantauan kesehatan kaki melalui
+          analisis AI untuk mendeteksi risiko lebih awal.
+        </p>
 
-</div>
-
-
-
-
-<h1>
-
-Protect Every Step
-With Intelligent Foot Care
-
-</h1>
-
-
-
-
-<p>
-
-FootGuard membantu melakukan pemantauan
-kesehatan kaki melalui analisis AI untuk
-mendeteksi risiko lebih awal.
-
-</p>
-
-
-
-
-
-<div
-className="
+        <div
+          className="
 hero-actions
 "
->
-
-
-<button
-className="
+        >
+          <button
+            className="
 button
 "
->
+          >
+            <ScanLine size={18} />
+            Mulai Pemeriksaan
+            <ArrowRight size={18} />
+          </button>
 
-<ScanLine size={18}/>
-
-Mulai Pemeriksaan
-
-<ArrowRight size={18}/>
-
-</button>
-
-
-
-<div
-className="
+          <div
+            className="
 hero-status
 "
->
+          >
+            <Activity size={18} />
 
-<Activity size={18}/>
+            <div>
+              <strong>AI System Ready</strong>
 
+              <span>Model analysis available</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-<div>
+      {/* Decorative Medical Visual */}
 
-<strong>
-AI System Ready
-</strong>
-
-<span>
-Model analysis available
-</span>
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-{/* Decorative Medical Visual */}
-
-
-<div
-className="
+      <div
+        className="
 hero-visual
 "
->
-
-
-<div
-className="
+      >
+        <div
+          className="
 hero-image-wrapper
 "
->
-
-
-<img
-
-src="/src/assets/editorial-feet.png"
-
-alt="Foot analysis"
-
-className="
+        >
+          <img
+            src="/src/assets/editorial-feet.png"
+            alt="Foot analysis"
+            className="
 hero-foot-image
 "
+          />
 
-/>
-
-
-
-<div
-className="
+          <div
+            className="
 scan-effect
 "
-/>
+          />
 
-
-
-<div
-className="
+          <div
+            className="
 analysis-card
 "
->
+          >
+            <div>
+              <p>Risk Score</p>
 
+              <strong>32%</strong>
+            </div>
 
-<div>
-
-<p>
-Risk Score
-</p>
-
-
-<strong>
-32%
-</strong>
-
-
-</div>
-
-
-
-<div className="risk-low">
-
-Low Risk
-
-</div>
-
-
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-
-</section>
-
-)
-
-
+            <div className="risk-low">Low Risk</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }

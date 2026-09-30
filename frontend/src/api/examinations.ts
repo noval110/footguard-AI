@@ -5,10 +5,10 @@ export const createExamination = (assessmentId: number) => request<Examination>(
 export const listExaminations = () => request<Examination[]>('/api/examinations')
 export const getExamination = (id: number) => request<ExaminationDetail>(`/api/examinations/${id}`)
 export const addFootImage = (id: number, data: FootImageInput) => request<FootImage>(`/api/examinations/${id}/images`, { method: 'POST', body: JSON.stringify(data) })
-export const analyzeFootImage = async (id: number, side: 'left' | 'right', file: File): Promise<PersistedAnalysis> => {
+export const analyzeFootImage = async (id: number, file: File): Promise<PersistedAnalysis> => {
   const body = new FormData()
   body.append('file', file)
-  body.append('foot_side', side)
+  body.append('foot_side', 'foot')
   const response = await request<PersistedAnalysis>(`/api/examinations/${id}/analyze`, { method: 'POST', body })
   if (!response.examination?.id || !response.image?.image_url || !response.ai_result?.id) throw new ApiError(502, 'Hasil analisis tidak dapat ditampilkan. Coba lagi nanti.')
   return response

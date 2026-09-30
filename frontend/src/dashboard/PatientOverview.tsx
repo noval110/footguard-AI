@@ -12,10 +12,10 @@ import photo from '../assets/editorial-feet.png'
 type Props = { user: User; examinationCount: number; examinations: ExaminationDetail[] }
 
 function LatestExamination({ detail }: { detail: ExaminationDetail }) {
-  const image = latestPhoto(detail, 'left') || latestPhoto(detail, 'right')
+  const image = latestPhoto(detail)
   const result = detail.ai_results[0]
   return <div className="fresh-latest-body">
-    <div className="fresh-exam-image">{image ? <ProtectedImage src={image.image_url} alt={`Foto kaki ${image.foot_side === 'left' ? 'kiri' : 'kanan'} pada pemeriksaan terakhir`} /> : <><Footprints size={45} strokeWidth={1.2} /><span>Belum ada foto</span></>}</div>
+    <div className="fresh-exam-image">{image ? <ProtectedImage src={image.image_url} alt="Foto kaki pada pemeriksaan terakhir" /> : <><Footprints size={45} strokeWidth={1.2} /><span>Belum ada foto</span></>}</div>
     <div className="fresh-exam-details"><div className="fresh-exam-meta"><span><CalendarDays size={14} />{dateLabel(detail.examination.examined_at)}</span><StatusBadge status={detail.examination.status} /></div><h3>{visualSummary(detail.ai_results)}</h3><p>{detail.risk_result?.explanation || 'Risiko klinis akan ditampilkan setelah dinilai oleh tenaga kesehatan.'}</p><dl><div><dt>Risiko kaki diabetik</dt><dd><RiskBadge value={detail.risk_result?.risk_category} /></dd></div><div><dt>Keyakinan AI</dt><dd>{result && Number.isFinite(result.confidence) ? `${(result.confidence * 100).toFixed(1)}%` : 'Belum tersedia'}</dd></div></dl><Link className="inline-link" to={`/patient/result/${detail.examination.id}`}>Lihat hasil pemeriksaan <ArrowRight size={15} /></Link></div>
   </div>
 }

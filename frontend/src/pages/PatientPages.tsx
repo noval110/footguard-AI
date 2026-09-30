@@ -201,10 +201,7 @@ export function ResultPage() {
   const examination = detail
   const ai = examination.ai_results
   const risk = examination.risk_result
-  const sides = [
-    latestPhoto(examination, 'left') && 'Kiri',
-    latestPhoto(examination, 'right') && 'Kanan'
-  ].filter(Boolean).join(' & ') || 'Belum ada foto'
+  const photoStatus = latestPhoto(examination) ? 'Foto kaki tersedia' : 'Belum ada foto'
 
   function download() {
     const report = `FootGuard — Ringkasan pemeriksaan
@@ -229,7 +226,7 @@ Hasil ini bukan diagnosis mandiri.`
       <PageHeader
         eyebrow={`PEMERIKSAAN #${examId}`}
         title="Hasil Pemeriksaan Kaki"
-        description={`${dateLabel(detail.examination.examined_at)} · ${sides}`}
+        description={`${dateLabel(detail.examination.examined_at)} · ${photoStatus}`}
         action={<StatusBadge status={detail.examination.status} />}
       />
 
@@ -243,8 +240,8 @@ Hasil ini bukan diagnosis mandiri.`
         </div>
         <div className="overview-grid">
           <div>
-            <span>Sisi kaki</span>
-            <strong>{sides}</strong>
+            <span>Foto kaki</span>
+            <strong>{photoStatus}</strong>
           </div>
           <div>
             <span>Hasil visual</span>
@@ -323,11 +320,7 @@ Hasil ini bukan diagnosis mandiri.`
         <button className="button button-secondary" onClick={download}>
           <Download size={16} /> Unduh Ringkasan
         </button>
-        {detail.examination.status !== 'reviewed' && (
-          <Link className="button button-secondary" to={`/patient/scan?examination=${examId}`}>
-            Tambah foto kaki
-          </Link>
-        )}
+        <Link className="button button-secondary" to="/patient/assessment">Pemeriksaan Baru</Link>
         <ButtonLink to="/patient/history">Lihat Riwayat</ButtonLink>
       </div>
     </>
@@ -405,8 +398,7 @@ export function HistoryPage() {
               <thead>
                 <tr>
                   <th>Tanggal</th>
-                  <th>Kaki Kiri</th>
-                  <th>Kaki Kanan</th>
+                  <th>Foto Kaki</th>
                   <th>Kategori Risiko</th>
                   <th>Status Review</th>
                   <th>Aksi</th>
@@ -416,11 +408,8 @@ export function HistoryPage() {
                 {rows.map(item => (
                   <tr key={item.examination.id}>
                     <td data-label="Tanggal">{dateLabel(item.examination.examined_at)}</td>
-                    <td data-label="Kaki Kiri">
-                      <FootImageCard side="Kiri" small src={latestPhoto(item, 'left')?.image_url} />
-                    </td>
-                    <td data-label="Kaki Kanan">
-                      <FootImageCard side="Kanan" small src={latestPhoto(item, 'right')?.image_url} />
+                    <td data-label="Foto Kaki">
+                      <FootImageCard small src={latestPhoto(item)?.image_url} />
                     </td>
                     <td data-label="Kategori Risiko">
                       {item.risk_result ? <RiskBadge value={item.risk_result.risk_category} /> : <span className="small muted">Belum dinilai</span>}

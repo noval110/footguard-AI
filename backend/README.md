@@ -24,6 +24,7 @@ From `C:\footguard\backend`:
    psql -h localhost -U footguard -d footguard -v ON_ERROR_STOP=1 -f migrations/001_init.sql
    psql -h localhost -U footguard -d footguard -v ON_ERROR_STOP=1 -f migrations/002_ai_persistence.sql
    psql -h localhost -U footguard -d footguard -v ON_ERROR_STOP=1 -f migrations/003_google_identity.sql
+   psql -h localhost -U footguard -d footguard -v ON_ERROR_STOP=1 -f migrations/004_neutral_foot_image.sql
    ```
 
 3. Copy `.env.example` to `.env` locally and set a real database password and a random JWT secret of at least 32 characters. Do not commit `.env`.
@@ -77,7 +78,7 @@ All success responses use `{ "success": true, "data": ... }`. Errors use `{ "suc
 
 Patient access to examination resources and stored images is limited to their own records. Providers assign the risk category explicitly; the API does not derive it. `POST /api/ai-results` stores supplied metadata and does not run image analysis. The older `POST /api/examinations/:id/images` route stores a URL only and remains for existing clients.
 
-`POST /api/examinations/:id/analyze` accepts a patient's authenticated multipart `file` and `foot_side` (`left` or `right`). It validates JPEG, PNG, or WebP up to 10 MiB, calls FastAPI, saves the original under `UPLOAD_DIR/original` and the decoded JPEG overlay under `UPLOAD_DIR/overlay`, and writes the image, numerical AI result, and completed examination status in one database transaction. Files are removed if persistence fails. The response envelope contains `examination`, `image`, and `ai_result`. The image URLs are private API routes that check the requesting user's role and ownership; use Bearer JWT when loading them. Neither the upload nor overlay base64 is stored in PostgreSQL. The examination remains open for another foot image until medical review.
+`POST /api/examinations/:id/analyze` accepts a patient's authenticated multipart `file` and `foot_side` (`foot` for the current single-photo flow; `left` and `right` remain valid for existing clients). It validates JPEG, PNG, or WebP up to 10 MiB, calls FastAPI, saves the original under `UPLOAD_DIR/original` and the decoded JPEG overlay under `UPLOAD_DIR/overlay`, and writes the image, numerical AI result, and completed examination status in one database transaction. Files are removed if persistence fails. The response envelope contains `examination`, `image`, and `ai_result`. The image URLs are private API routes that check the requesting user's role and ownership; use Bearer JWT when loading them. Neither the upload nor overlay base64 is stored in PostgreSQL. Apply migration `004_neutral_foot_image.sql` to existing databases before using the new frontend.
 
 `POST /api/examinations/analyze` remains available as a legacy preview endpoint. It forwards the file and returns the base64 overlay without saving it. New clients should use the examination ID endpoint above. Neither endpoint assigns a clinical risk category. AI service failures return a concise backend error without exposing the upstream body.
 
@@ -86,7 +87,7 @@ Patient access to examination resources and stored images is limited to their ow
 1. Register a patient with `name`, `email`, and `password`.
 2. Use the returned token to `PUT /api/patients/me` with `birth_date` (`YYYY-MM-DD`), `gender`, `diabetes_type`, `diagnosis_year`, and optional `phone`/`address`.
 3. `POST /api/assessments` with all six Boolean clinical factors: `has_lops`, `has_pad`, `foot_deformity`, `previous_ulcer`, `previous_amputation`, `kidney_failure`.
-4. `POST /api/examinations` with `assessment_id`, then upload each foot with multipart `file` and `foot_side` to `POST /api/examinations/:id/analyze`.
+4. `POST /api/examinations` with `assessment_id`, then upload one foot photo with multipart `file` and `foot_side=foot` to `POST /api/examinations/:id/analyze`.
 5. A provisioned provider may store actual external AI metadata through `POST /api/ai-results`, assign `risk_category` (`low`, `moderate`, `high`) plus `explanation`, and save `review_status` (`pending`, `approved`, `needs_followup`) plus `notes`.
 6. The patient can read persisted examination detail, AI values, images, and history after a new session or refresh. The provider can read the complete examination and patient list.
 

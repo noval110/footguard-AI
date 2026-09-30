@@ -3,9 +3,9 @@ import { RiskBadge } from './UI'
 
 // Public, illustrative data only. These previews never request patient records.
 const exampleHistory = [
-  { date: '24 Sep 2026', side: 'Kaki kiri', risk: 'moderate' as const },
-  { date: '10 Sep 2026', side: 'Kaki kanan', risk: 'low' as const },
-  { date: '27 Agu 2026', side: 'Kaki kiri', risk: 'low' as const },
+  { date: '24 Sep 2026', side: 'Foto kaki', risk: 'moderate' as const },
+  { date: '10 Sep 2026', side: 'Foto kaki', risk: 'low' as const },
+  { date: '27 Agu 2026', side: 'Foto kaki', risk: 'low' as const },
 ]
 
 export function PreviewBrand() {
@@ -33,7 +33,7 @@ export function FootIllustration({ marked = true }: { marked?: boolean }) {
 export function ResultPreview({ phone = false }: { phone?: boolean }) {
   return <div className={phone ? 'lp-phone' : 'lp-result-preview'}>
     {phone && <><span className="lp-phone-speaker" aria-hidden="true" /><div className="lp-phone-status" aria-hidden="true"><span>09.41</span><span>••• ▰</span></div><PreviewBrand /></>}
-    <div className="lp-result-heading"><strong>Hasil Pemeriksaan</strong><span>24 September 2026 · Kaki kiri</span></div>
+    <div className="lp-result-heading"><strong>Hasil Pemeriksaan</strong><span>24 September 2026 · Foto kaki</span></div>
     <FootIllustration />
     <div className="lp-result-notice"><ScanLine size={16} aria-hidden="true" /><span>Area yang perlu<br />diperhatikan</span></div>
     <div className="lp-result-risk"><span>Risiko kaki diabetik</span><RiskBadge value="moderate" /></div>

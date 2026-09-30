@@ -4,7 +4,7 @@ Responsive React, Vite, TypeScript, Tailwind CSS, and React Router interface for
 
 ## Run with the backend
 
-1. Set up PostgreSQL, apply migrations `001`, `002`, and `003`, and start the backend as described in `../backend/README.md`.
+1. Set up PostgreSQL, apply migrations `001` through `004`, and start the backend as described in `../backend/README.md`.
 2. In this directory, copy `.env.example` to `.env` and set `VITE_API_URL` to the backend origin. Its default example is `http://localhost:8080`.
    Set `VITE_GOOGLE_CLIENT_ID` to the same Google web OAuth client ID used by the backend's `GOOGLE_CLIENT_ID` to show Sign in with Google.
 3. Run `npm install` if dependencies are missing, then `npm run dev`. Vite normally serves `http://localhost:5173`, which matches the backend's default `FRONTEND_ORIGIN`. If you choose another frontend port, set `FRONTEND_ORIGIN` on the backend to that exact origin.

@@ -32,12 +32,6 @@ export function VisualAnalysis({ detail, results }: VisualAnalysisProps) {
     <div className="fg-visual-analysis-container">
       {results.map(item => {
         const photo = detail.foot_images.find(image => image.id === item.foot_image_id)
-        const side =
-          photo?.foot_side === 'left'
-            ? 'kiri'
-            : photo?.foot_side === 'right'
-            ? 'kanan'
-            : 'tidak diketahui'
 
         const detected = item.ulcer_detected === true
         const clear = item.ulcer_detected === false
@@ -55,9 +49,9 @@ export function VisualAnalysis({ detail, results }: VisualAnalysisProps) {
           : 'Temuan Visual Tersedia'
 
         const explanation = detected
-          ? `Pada foto kaki ${side}, model analisis visual AI mendeteksi pola yang menyerupai lesi atau ulkus awal pada area plantar/telapak. Temuan ini menunjukkan adanya area yang patut mendapat perhatian klinis, namun bukan merupakan penetapan diagnosis definitif.`
+          ? 'Pada foto kaki, model analisis visual AI mendeteksi pola yang menyerupai lesi atau ulkus awal pada area plantar/telapak. Temuan ini menunjukkan adanya area yang patut mendapat perhatian klinis, namun bukan merupakan penetapan diagnosis definitif.'
           : clear
-          ? `Pada foto kaki ${side}, model analisis visual AI tidak menemukan area yang melampaui ambang batas deteksi. Meskipun demikian, kualitas pencahayaan, sudut pengambilan gambar, dan keluhan subyektif tetap memerlukan konfirmasi tenaga medis.`
+          ? 'Pada foto kaki, model analisis visual AI tidak menemukan area yang melampaui ambang batas deteksi. Meskipun demikian, kualitas pencahayaan, sudut pengambilan gambar, dan keluhan subyektif tetap memerlukan konfirmasi tenaga medis.'
           : 'Hasil analisis ini menyajikan pola visual awal dari model kecerdasan buatan. Tenaga kesehatan berwenang tetap perlu menilai foto dan kondisi fisik kaki secara langsung.'
 
         const nextStep = detected
@@ -65,14 +59,14 @@ export function VisualAnalysis({ detail, results }: VisualAnalysisProps) {
           : 'Lanjutkan perawatan dan inspeksi harian. Bila terdapat rasa kebas, panas, atau nyeri, segera konsultasikan ke fasilitas kesehatan.'
 
         return (
-          <section className="fg-visual-result-card" key={item.id} aria-label={`Analisis Kaki ${side}`}>
+          <section className="fg-visual-result-card" key={item.id} aria-label="Analisis kaki">
             {/* Header */}
             <div className="fg-visual-card-head">
               <div>
                 <span className="eyebrow">
-                  AI ASSISTED ANALYSIS · KAKI {side.toUpperCase()}
+                  AI ASSISTED ANALYSIS · KAKI
                 </span>
-                <h3>Pemeriksaan Kaki {side.charAt(0).toUpperCase() + side.slice(1)}</h3>
+                <h3>Pemeriksaan Kaki</h3>
                 <small style={{ color: 'var(--fg-text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
                   <CalendarDays size={13} /> {dateLabel(item.created_at)}
                 </small>
@@ -95,11 +89,11 @@ export function VisualAnalysis({ detail, results }: VisualAnalysisProps) {
                 <div className="fg-visual-pane-img">
                   <ProtectedImage
                     src={photo?.image_url}
-                    alt={`Foto asli kaki ${side}`}
+                    alt="Foto asli kaki"
                   />
                 </div>
                 <div className="fg-visual-pane-caption">
-                  <span>Foto Asli Kaki {side}</span>
+                  <span>Foto Asli Kaki</span>
                   <small>Dokumentasi Pasien</small>
                 </div>
               </div>
@@ -110,7 +104,7 @@ export function VisualAnalysis({ detail, results }: VisualAnalysisProps) {
                   {item.mask_url ? (
                     <ProtectedImage
                       src={item.mask_url}
-                      alt={`Visualisasi AI kaki ${side}`}
+                      alt="Visualisasi AI kaki"
                     />
                   ) : (
                     <div className="fg-visual-unavailable" role="status">

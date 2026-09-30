@@ -97,11 +97,11 @@ func (h *Handler) analyzeFootImage(c echo.Context, persist bool) error {
 	if persist {
 		side = c.FormValue("foot_side")
 
-		if !validChoice(side, "left", "right") {
+		if !validChoice(side, "left", "right", "foot") {
 			return fail(
 				c,
 				http.StatusBadRequest,
-				"Pilih sisi kaki kiri atau kanan",
+				"Jenis foto kaki tidak valid",
 			)
 		}
 	}

@@ -142,7 +142,7 @@ func (h *Handler) AddFootImage(c echo.Context) error {
 	if body.QualityStatus == "" {
 		body.QualityStatus = "pending"
 	}
-	if !validImageURL(body.ImageURL) || !validChoice(body.FootSide, "left", "right") || !validChoice(body.ImageType, "photo", "processed", "mask") || !validChoice(body.QualityStatus, "pending", "good", "blurry", "incomplete") {
+	if !validImageURL(body.ImageURL) || !validChoice(body.FootSide, "left", "right", "foot") || !validChoice(body.ImageType, "photo", "processed", "mask") || !validChoice(body.QualityStatus, "pending", "good", "blurry", "incomplete") {
 		return fail(c, http.StatusBadRequest, "Invalid foot image metadata")
 	}
 	img, err := h.Store.CreateFootImage(c.Request().Context(), models.FootImage{ExaminationID: e.ID, ImageURL: body.ImageURL, FootSide: body.FootSide, ImageType: body.ImageType, QualityStatus: body.QualityStatus})

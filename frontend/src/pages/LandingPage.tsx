@@ -113,7 +113,7 @@ function TrustStrip() {
 }
 
 const steps = [
-  { icon: Camera, title: 'Ambil Foto Kaki', text: 'Lengkapi data klinis, lalu unggah foto kaki kiri atau kanan dengan pencahayaan yang cukup.' },
+  { icon: Camera, title: 'Ambil Foto Kaki', text: 'Lengkapi data klinis, lalu unggah satu foto kaki dengan pencahayaan yang cukup.' },
   { icon: ScanLine, title: 'Analisis Sistem', text: 'AI membantu mengenali temuan visual dan menandai area yang perlu diperhatikan.' },
   { icon: ClipboardCheck, title: 'Penilaian Risiko Kaki Diabetik', text: 'Informasi klinis melengkapi pemeriksaan untuk penilaian risiko kaki diabetik.' },
   { icon: Stethoscope, title: 'Review Tenaga Kesehatan', text: 'Tenaga kesehatan dapat meninjau pemeriksaan dan memberikan catatan tindak lanjut.' },
