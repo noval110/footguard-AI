@@ -9,7 +9,7 @@ const exampleHistory = [
 ]
 
 export function PreviewBrand() {
-  return <span className="lp-preview-brand"><Footprints size={17} aria-hidden="true" />FootGuard</span>
+  return <span className="lp-preview-brand"><Footprints size={17} aria-hidden="true" />DIA SCAN</span>
 }
 
 export function FootIllustration({ marked = true }: { marked?: boolean }) {

@@ -6,6 +6,7 @@ import (
 )
 
 type User struct {
+	AvatarURL string    `json:"avatar_url,omitempty"`
 	ID        int64     `json:"id"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
@@ -84,13 +85,15 @@ type RiskResult struct {
 }
 
 type MedicalReview struct {
-	ID            int64     `json:"id"`
-	ExaminationID int64     `json:"examination_id"`
-	ReviewerID    int64     `json:"reviewer_id"`
-	Notes         string    `json:"notes"`
-	ReviewStatus  string    `json:"review_status"`
-	ReviewedAt    time.Time `json:"reviewed_at"`
-	CreatedAt     time.Time `json:"created_at"`
+	ID                     int64     `json:"id"`
+	ExaminationID          int64     `json:"examination_id"`
+	ReviewerID             int64     `json:"reviewer_id"`
+	Notes                  string    `json:"notes"`
+	Conclusion             string    `json:"conclusion"`
+	FollowupRecommendation string    `json:"followup_recommendation"`
+	ReviewStatus           string    `json:"review_status"`
+	ReviewedAt             time.Time `json:"reviewed_at"`
+	CreatedAt              time.Time `json:"created_at"`
 }
 
 type ExaminationDetail struct {

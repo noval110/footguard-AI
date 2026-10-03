@@ -1,0 +1,24 @@
+{
+  "checks": [
+    "JWT is required for every photo endpoint",
+    "Backend accepts JPEG/PNG and rejects invalid/WebP/oversized images",
+    "patient: email/password login and empty-avatar fallback",
+    "patient: file validation before upload",
+    "patient: preview, cancel, and save with immediate sidebar/header update",
+    "patient: upload failure retains preview and existing photo, retry works",
+    "patient: profile data editing and completion are preserved",
+    "patient: photo persists after refresh and logout/login",
+    "patient: responsive layout without horizontal overflow",
+    "patient: delete restores profile/sidebar/header initials",
+    "provider: email/password login and empty-avatar fallback",
+    "provider: file validation before upload",
+    "provider: preview, cancel, and save with immediate sidebar/header update",
+    "provider: upload failure retains preview and existing photo, retry works",
+    "provider: photo persists after refresh and logout/login",
+    "provider: responsive layout without horizontal overflow",
+    "provider: delete restores profile/sidebar/header initials",
+    "Cross-account query parameters cannot read or delete another photo"
+  ],
+  "pageErrors": [],
+  "environment": "Real local Go API and isolated PostgreSQL; deliberately simulated upload failure once per role; headless Edge via Playwright."
+}

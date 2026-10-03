@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { errorText } from '../api/client'
 
 export function useResource<T>(load: () => Promise<T>, key: string | number = 'default') {
@@ -13,6 +13,6 @@ export function useResource<T>(load: () => Promise<T>, key: string | number = 'd
     loader.current().then(data => { if (active) { setValue(data); setError('') } }).catch(err => { if (active) setError(errorText(err)) }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [key, version])
-  const reload = () => { setLoading(true); setVersion(v => v + 1) }
+  const reload = useCallback(() => { setLoading(true); setVersion(v => v + 1) }, [])
   return { value, loading, error, reload }
 }

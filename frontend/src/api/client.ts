@@ -17,11 +17,14 @@ export const tokenStore = {
 type APIResponse = { response: Response; payload: unknown }
 
 const userMessage = (status: number, backendMessage?: string) => {
-  if (status === 400) return 'Data belum sesuai. Periksa kembali isian Anda.'
+  if (status === 400) return backendMessage || 'Data belum sesuai. Periksa kembali isian Anda.'
   if (status === 401) return 'Sesi Anda berakhir. Silakan masuk kembali.'
   if (status === 403) return 'Anda tidak memiliki akses ke halaman ini.'
   if (status === 404) return 'Data yang dicari tidak ditemukan.'
-  if (status === 409) return 'Data sudah ada atau langkah sebelumnya belum selesai.'
+  if (status === 409) return backendMessage || 'Data sudah ada atau langkah sebelumnya belum selesai.'
+  if (status === 429) return 'Terlalu banyak permintaan. Tunggu sebentar dan coba lagi.'
+  if (status === 502) return 'Layanan analisis AI tidak dapat dihubungi atau gagal memproses foto. Coba lagi nanti.'
+  if (status === 503) return 'Layanan belum siap. Coba lagi setelah beberapa saat.'
   if (status >= 500) return 'Layanan sedang mengalami gangguan. Coba lagi nanti.'
   return backendMessage || 'Permintaan tidak dapat diproses.'
 }
@@ -60,7 +63,6 @@ export async function requestUnwrapped<T>(path: string, options: RequestInit = {
   const { response, payload } = await fetchAPI(path, options)
   if (!response.ok) {
     const message = failureMessage(payload)
-    if (response.status === 502) throw new ApiError(502, 'Layanan analisis AI tidak dapat dihubungi. Coba lagi nanti.')
     throw new ApiError(response.status, message && [400, 413, 503].includes(response.status) ? message : userMessage(response.status, message))
   }
   if (!payload || typeof payload !== 'object') throw new ApiError(response.status, 'Respons server tidak valid.')

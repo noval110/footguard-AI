@@ -131,19 +131,29 @@ func (s *Store) SaveReview(ctx context.Context, v models.MedicalReview) (models.
 	}
 	defer tx.Rollback(ctx)
 	var out models.MedicalReview
-	err = tx.QueryRow(ctx, `INSERT INTO medical_reviews (examination_id,reviewer_id,notes,review_status) VALUES ($1,$2,$3,$4) ON CONFLICT (examination_id) DO UPDATE SET reviewer_id=EXCLUDED.reviewer_id,notes=EXCLUDED.notes,review_status=EXCLUDED.review_status,reviewed_at=now(),updated_at=now() RETURNING id,examination_id,reviewer_id,notes,review_status,reviewed_at,created_at`, v.ExaminationID, v.ReviewerID, v.Notes, v.ReviewStatus).Scan(&out.ID, &out.ExaminationID, &out.ReviewerID, &out.Notes, &out.ReviewStatus, &out.ReviewedAt, &out.CreatedAt)
+	err = tx.QueryRow(ctx, `INSERT INTO medical_reviews (examination_id,reviewer_id,notes,review_status,conclusion,followup_recommendation) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (examination_id) DO UPDATE SET reviewer_id=EXCLUDED.reviewer_id,notes=EXCLUDED.notes,review_status=EXCLUDED.review_status,conclusion=EXCLUDED.conclusion,followup_recommendation=EXCLUDED.followup_recommendation,reviewed_at=now(),updated_at=now() RETURNING id,examination_id,reviewer_id,notes,review_status,reviewed_at,created_at,conclusion,followup_recommendation`, v.ExaminationID, v.ReviewerID, v.Notes, v.ReviewStatus, v.Conclusion, v.FollowupRecommendation).Scan(&out.ID, &out.ExaminationID, &out.ReviewerID, &out.Notes, &out.ReviewStatus, &out.ReviewedAt, &out.CreatedAt, &out.Conclusion, &out.FollowupRecommendation)
 	if err != nil {
 		return models.MedicalReview{}, err
 	}
 	if _, err = tx.Exec(ctx, `UPDATE examinations SET status='reviewed',updated_at=now() WHERE id=$1`, v.ExaminationID); err != nil {
 		return models.MedicalReview{}, err
 	}
+	var patientUserID int64
+	if err = tx.QueryRow(ctx, `SELECT p.user_id FROM examinations e JOIN patients p ON p.id=e.patient_id WHERE e.id=$1`, v.ExaminationID).Scan(&patientUserID); err != nil {
+		return out, err
+	}
+	if err = notify(ctx, tx, patientUserID, "examination_reviewed", nil, &v.ExaminationID); err != nil {
+		return out, err
+	}
+	if err = emit(ctx, tx, []int64{patientUserID}, "examination_reviewed", map[string]any{"examination_id": v.ExaminationID}, false); err != nil {
+		return out, err
+	}
 	return out, tx.Commit(ctx)
 }
 
 func (s *Store) ReviewByExam(ctx context.Context, examID int64) (models.MedicalReview, error) {
 	var v models.MedicalReview
-	err := s.DB.QueryRow(ctx, `SELECT id,examination_id,reviewer_id,notes,review_status,reviewed_at,created_at FROM medical_reviews WHERE examination_id=$1`, examID).Scan(&v.ID, &v.ExaminationID, &v.ReviewerID, &v.Notes, &v.ReviewStatus, &v.ReviewedAt, &v.CreatedAt)
+	err := s.DB.QueryRow(ctx, `SELECT id,examination_id,reviewer_id,notes,review_status,reviewed_at,created_at,conclusion,followup_recommendation FROM medical_reviews WHERE examination_id=$1`, examID).Scan(&v.ID, &v.ExaminationID, &v.ReviewerID, &v.Notes, &v.ReviewStatus, &v.ReviewedAt, &v.CreatedAt, &v.Conclusion, &v.FollowupRecommendation)
 	return v, one(err)
 }
 

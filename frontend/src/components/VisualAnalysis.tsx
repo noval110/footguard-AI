@@ -181,7 +181,7 @@ export function VisualAnalysis({ detail, results }: VisualAnalysisProps) {
             <div className="fg-clinical-disclaimer" role="note">
               <Info size={17} style={{ flexShrink: 0, marginTop: '2px' }} />
               <div>
-                <strong>AI assisted analysis — Bukan diagnosis medis:</strong> Analisis visual FootGuard berfungsi sebagai alat skrining awal dan pemantauan mandiri. Seluruh hasil temuan harus dikonfirmasi melalui evaluasi klinis langsung oleh dokter atau tenaga kesehatan profesional.
+                <strong>AI assisted analysis — Bukan diagnosis medis:</strong> Analisis visual DIA SCAN berfungsi sebagai alat skrining awal dan pemantauan mandiri. Seluruh hasil temuan harus dikonfirmasi melalui evaluasi klinis langsung oleh dokter atau tenaga kesehatan profesional.
               </div>
             </div>
           </section>

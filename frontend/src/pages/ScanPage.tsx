@@ -158,7 +158,7 @@ export function ScanPage() {
           <button className="button analyze-button" type="button" onClick={analyze} disabled={analyzing || scanLocked}>
             {analyzing ? <><LoaderCircle className="spin" size={16} /> Menganalisis foto kaki...</> : 'Analisis dengan AI'}
           </button>
-          {analyzing && <p className="analysis-progress" role="status">FootGuard sedang mencari area visual yang perlu diperhatikan.</p>}
+          {analyzing && <p className="analysis-progress" role="status">DIA SCAN sedang mencari area visual yang perlu diperhatikan.</p>}
           {analysisError && <p className="form-error" role="alert">{analysisError}</p>}
         </div>
         <aside className="scan-guide">

@@ -8,6 +8,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(!!tokenStore.get())
   const [sessionError, setSessionError] = useState('')
+  const updateUser = useCallback((updated: User) => setUser(current => current?.id === updated.id ? updated : current), [])
   const signOut = useCallback(() => { tokenStore.clear(); setUser(null); setSessionError(''); setLoading(false) }, [])
   async function retrySession() {
     if (!tokenStore.get()) return
@@ -30,5 +31,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
   const signIn = async (email: string, password: string) => completeAuth(await login(email, password))
   const signInWithGoogle = async (credential: string) => completeAuth(await loginWithGoogle(credential))
-  return <AuthContext.Provider value={{ user, loading, sessionError, retrySession, signIn, signInWithGoogle, signOut }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, loading, sessionError, retrySession, signIn, signInWithGoogle, signOut, updateUser }}>{children}</AuthContext.Provider>
 }

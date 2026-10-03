@@ -127,5 +127,11 @@ func (h *Handler) GoogleLogin(c echo.Context) error {
 }
 
 func (h *Handler) Profile(c echo.Context) error {
-	return success(c, http.StatusOK, appmiddleware.User(c))
+	user := appmiddleware.User(c)
+	url, err := h.profilePhotoURL(user.ID)
+	if err != nil {
+		return dbError(c, err)
+	}
+	user.AvatarURL = url
+	return success(c, http.StatusOK, user)
 }

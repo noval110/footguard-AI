@@ -69,15 +69,15 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
         <div className="fresh-auth-caption"><Footprints size={21} /><span>Setiap langkah berarti.<small>See Today, Healthier Tomorrow.</small></span></div>
       </aside>
       <section className="fresh-auth-form" aria-labelledby="auth-title">
-        <span className="eyebrow">{login ? 'SELAMAT DATANG KEMBALI' : 'MULAI BERSAMA FOOTGUARD'}</span>
-        <h1 id="auth-title">{login ? 'Masuk ke FootGuard' : patient ? 'Buat akun pasien' : 'Akses tenaga kesehatan'}</h1>
+        <span className="eyebrow">{login ? 'SELAMAT DATANG KEMBALI' : 'MULAI BERSAMA DIA SCAN'}</span>
+        <h1 id="auth-title">{login ? 'Masuk ke DIA SCAN' : patient ? 'Buat akun pasien' : 'Akses tenaga kesehatan'}</h1>
         <p className="fresh-auth-intro">{login ? patient ? 'Lanjutkan pemantauan kaki dan buka kembali catatan pemeriksaan Anda.' : 'Tinjau hasil pemeriksaan pasien dan catat tindak lanjut perawatan.' : patient ? 'Mulai catatan kesehatan kaki Anda dengan satu akun.' : 'Akun tenaga kesehatan disediakan oleh administrator institusi.'}</p>
         <div className="auth-role-picker" role="group" aria-label="Pilih jenis akun">
           <button type="button" className={patient ? 'selected' : ''} onClick={() => chooseRole('patient')} aria-pressed={patient} disabled={submitting}><UserRound size={19} /><span><strong>Pasien</strong><small>Pemantauan pribadi</small></span></button>
           <button type="button" className={!patient ? 'selected' : ''} onClick={() => chooseRole('provider')} aria-pressed={!patient} disabled={submitting}><Stethoscope size={19} /><span><strong>Tenaga kesehatan</strong><small>Peninjauan klinis</small></span></button>
         </div>
         {login && routeState?.registered && <p className="success-message" role="status">Akun pasien berhasil dibuat. Silakan masuk.</p>}
-        {!login && !patient ? <div className="fresh-provider-notice"><ShieldCheck size={26} /><h2>Akun klinis dikelola administrator</h2><p>Hubungi administrator FootGuard di institusi Anda untuk mendapatkan akses tenaga kesehatan.</p><Link className="button" to="/login" state={{ role: 'provider' }}>Masuk dengan akun klinis<ArrowRight size={16} /></Link></div> : <>
+        {!login && !patient ? <div className="fresh-provider-notice"><ShieldCheck size={26} /><h2>Akun klinis dikelola administrator</h2><p>Hubungi administrator DIA SCAN di institusi Anda untuk mendapatkan akses tenaga kesehatan.</p><Link className="button" to="/login" state={{ role: 'provider' }}>Masuk dengan akun klinis<ArrowRight size={16} /></Link></div> : <>
           <form onSubmit={submit} noValidate>
             {!login && <label className="field" htmlFor="auth-name">Nama lengkap<input id="auth-name" name="name" autoComplete="name" maxLength={100} placeholder="Nama lengkap Anda" required disabled={submitting} /></label>}
             <label className="field" htmlFor="auth-email">Alamat email<input id="auth-email" name="email" type="email" autoComplete="email" placeholder="nama@email.com" required disabled={submitting} aria-invalid={error ? true : undefined} aria-describedby={error ? 'auth-error' : undefined} /></label>
@@ -91,6 +91,6 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
         <div className="fresh-auth-assurance"><ShieldCheck size={17} /><p>Akses sesuai peran akun.<br />Catatan pemeriksaan untuk mendukung perawatan Anda.</p></div>
       </section>
     </main>
-    <footer className="fresh-auth-footer"><span>© {new Date().getFullYear()} FootGuard</span><p>FootGuard membantu skrining dan pemantauan kaki diabetik. Hasil AI tidak menggantikan pemeriksaan tenaga kesehatan.</p></footer>
+    <footer className="fresh-auth-footer"><span>© {new Date().getFullYear()} DIA SCAN</span><p>DIA SCAN membantu skrining dan pemantauan kaki diabetik. Hasil AI tidak menggantikan pemeriksaan tenaga kesehatan.</p></footer>
   </div>
 }

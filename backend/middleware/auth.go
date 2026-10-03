@@ -46,3 +46,15 @@ func RequireRole(role string) echo.MiddlewareFunc {
 		}
 	}
 }
+
+func RequireCareRole() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			role := User(c).Role
+			if role != "patient" && role != "provider" {
+				return c.JSON(http.StatusForbidden, map[string]any{"success": false, "message": "Patient or provider access required"})
+			}
+			return next(c)
+		}
+	}
+}

@@ -1,5 +1,7 @@
 # FootGuard backend
 
+Monitoring, secure consultations, appointments, WebSocket delivery, audio calls, migration `005`, environment variables, verification, production deployment, and rollback are documented in [DIA SCAN consultations](../docs/consultations.md). Apply migration `005_monitoring_consultations.sql` after `004` before running the extended backend. The AI service and existing authentication remain compatible.
+
 Go/Echo API for diabetic foot screening and monitoring. PostgreSQL stores clinical assessments, foot image metadata, visual AI findings, clinical risk results, and medical reviews separately. This service does not diagnose diabetes or calculate a medical risk category.
 
 ## Requirements
@@ -38,6 +40,16 @@ From `C:\footguard\backend`:
 
 The health endpoint is `GET http://localhost:8080/health`.
 
+### Local troubleshooting
+
+When FastAPI runs locally on port `8000`, set `AI_SERVICE_URL=http://127.0.0.1:8000` in `backend/.env` and restart the backend. An old tunnel URL can cause `502` even when local model loading succeeds. Check `http://127.0.0.1:8000/health` for both `classifier_loaded` and `segmentation_model_loaded`, then run the backend from `C:\footguard\backend` so its relative upload directory resolves correctly.
+
+Neon stores image metadata, not the uploaded image files. Connecting a local backend to Neon does not download the production `UPLOAD_DIR/original` and `UPLOAD_DIR/overlay` files. Missing files return `404`; restore the corresponding upload files from the server or backup to the configured upload directory, preserving their filenames. Existing images cannot be recovered from database metadata alone.
+
+If `/api/conversations` returns `404`, restart the backend with the current source. Missing migration `005` is a separate database issue; check its tables before applying it, and obtain deployment authorization before changing production databases. A `401` on `/api/profile` requires signing in again with a valid session.
+
+If saving a profile photo returns `403` while patient pages still work, check whether the local backend process is an old executable that predates `/api/profile/photo`. A missing route can fall through a role-protected group and return a misleading permission error. Rebuild/restart the local backend from the current source on the actual frontend API port. Tests against a different backend port do not update the running process. Keep the same database, JWT secret, and upload directory; changing roles or removing JWT checks is unnecessary.
+
 ### Environment variables
 
 | Variable | Purpose |
@@ -63,6 +75,12 @@ go run ./cmd/create-provider --name "Dr Maya" --email "maya@example.com"
 Apply `migrations/003_google_identity.sql` to each existing database before deploying the updated backend. Docker's `/docker-entrypoint-initdb.d` scripts run only when the PostgreSQL volume is first created, so an existing Compose database also needs this one-time migration. Do not recreate the volume to apply it.
 
 Set `GOOGLE_CLIENT_ID` to the same Google **Web application** OAuth client ID used by the frontend. `POST /api/auth/google` accepts `{"credential":"<Google ID token>"}` and returns the same `{user, token}` data shape as password login. The server verifies Google's signature, audience, issuer, expiration, and `email_verified` claim before using `sub` and email. Existing accounts retain their stored role and password hash; new Google accounts are patients with an unusable random password hash. Missing Google configuration disables only this endpoint.
+
+## Profile photos
+
+`GET /api/profile` includes `avatar_url` when the signed-in user has a photo. `PUT /api/profile/photo` accepts multipart field `photo` (JPG or PNG, up to 5 MB and 4096 × 4096 pixels); `DELETE /api/profile/photo` removes it. Both return the updated user. `GET /api/profile/photo` serves only the authenticated user's photo with private, no-store caching. The frontend prepares phone-camera orientation, previews the photo, and synchronizes saved changes across the profile, sidebar, and header.
+
+Photos are validated and re-encoded as JPEG, then stored under `UPLOAD_DIR/avatars/<user-id>.jpg`. Keep this directory in the existing persistent upload volume and include it in upload backups. No database migration is required.
 
 ## API
 

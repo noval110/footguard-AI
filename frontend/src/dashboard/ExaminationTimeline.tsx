@@ -69,7 +69,7 @@ text-gray-500
 mt-1
 "
               >
-                Tahapan pemeriksaan FootGuard
+                Tahapan pemeriksaan DIA SCAN
               </p>
             </div>
           </div>

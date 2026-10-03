@@ -252,8 +252,10 @@ func (h *Handler) ProviderExamination(c echo.Context) error {
 }
 
 type reviewInput struct {
-	Notes        string `json:"notes"`
-	ReviewStatus string `json:"review_status"`
+	Notes                  string `json:"notes"`
+	ReviewStatus           string `json:"review_status"`
+	Conclusion             string `json:"conclusion"`
+	FollowupRecommendation string `json:"followup_recommendation"`
 }
 
 func (h *Handler) SaveMedicalReview(c echo.Context) error {
@@ -275,10 +277,10 @@ func (h *Handler) SaveMedicalReview(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "Invalid JSON body")
 	}
 	body.Notes = strings.TrimSpace(body.Notes)
-	if !required(body.Notes, 5000) || !validChoice(body.ReviewStatus, "pending", "approved", "needs_followup") {
+	if !required(body.Notes, 5000) || len(body.Conclusion) > 5000 || len(body.FollowupRecommendation) > 5000 || !validChoice(body.ReviewStatus, "pending", "approved", "needs_followup") {
 		return fail(c, http.StatusBadRequest, "Valid notes and review_status are required")
 	}
-	v, err := h.Store.SaveReview(c.Request().Context(), models.MedicalReview{ExaminationID: id, ReviewerID: appmiddleware.User(c).ID, Notes: body.Notes, ReviewStatus: body.ReviewStatus})
+	v, err := h.Store.SaveReview(c.Request().Context(), models.MedicalReview{ExaminationID: id, ReviewerID: appmiddleware.User(c).ID, Notes: body.Notes, ReviewStatus: body.ReviewStatus, Conclusion: strings.TrimSpace(body.Conclusion), FollowupRecommendation: strings.TrimSpace(body.FollowupRecommendation)})
 	if err != nil {
 		return dbError(c, err)
 	}

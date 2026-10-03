@@ -33,6 +33,8 @@ uploads/
 Thumbs.db
 
 # Local database / dumps
+artifacts/consultation-test-db/
+artifacts/consultation-browser-runtime/
 *.sqlite
 *.sqlite3
 *.db

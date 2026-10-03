@@ -1,0 +1,18 @@
+{
+  "checks": [
+    "Patient and provider password login",
+    "Progress timeline and comparison at 360/390/768/1440px",
+    "Provider queue includes older examinations and review fields",
+    "Persistent realtime chat, plain text, and unread/read states",
+    "Request and confirm appointment from participant UIs",
+    "WebRTC incoming call, accept, bidirectional audio, mute, hang up",
+    "Incoming call rejection",
+    "Simulated microphone permission denial",
+    "Simulated missing microphone",
+    "Accepting in another provider tab keeps the connected call active",
+    "Mobile consultation list, composer, appointment layout and call keyboard focus"
+  ],
+  "runtimeErrors": [],
+  "media": "Edge headless with simulated microphone devices; bidirectional RTP bytes verified",
+  "production": false
+}

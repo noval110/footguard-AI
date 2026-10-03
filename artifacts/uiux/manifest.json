@@ -1,0 +1,284 @@
+{
+  "screens": [
+    {
+      "file": "screenshots\\01-beranda.png",
+      "title": "Beranda dan navigasi",
+      "route": "/",
+      "note": "Navigasi mengikuti urutan Beranda, Fitur, Cara Kerja, Untuk Tenaga Kesehatan, dan Tentang.",
+      "demo": false,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\02-fitur.png",
+      "title": "Fitur utama",
+      "route": "/",
+      "note": "Empat kartu fitur memperlihatkan hasil, riwayat, area yang ditandai, dan dashboard tenaga kesehatan.",
+      "demo": false,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\03-cara-kerja.png",
+      "title": "Cara kerja",
+      "route": "/",
+      "note": "Empat langkah menjelaskan dokumentasi foto, analisis sistem, penilaian risiko, dan review.",
+      "demo": false,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\04-cuplikan.png",
+      "title": "Cuplikan aplikasi",
+      "route": "/",
+      "note": "Tab memperlihatkan pratinjau dashboard pasien, hasil, riwayat, dan tenaga kesehatan.",
+      "demo": false,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\05-tenaga-kesehatan.png",
+      "title": "Untuk tenaga kesehatan",
+      "route": "/",
+      "note": "Ajakan masuk ke akun klinis dan informasi akses melalui administrator institusi.",
+      "demo": false,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\06-tentang.png",
+      "title": "Tentang DIA SCAN",
+      "route": "/",
+      "note": "Nilai layanan ditampilkan melalui kemudahan penggunaan, monitoring, dukungan klinis, dan visualisasi.",
+      "demo": false,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\07-login.png",
+      "title": "Masuk ke akun",
+      "route": "/login",
+      "note": "Pemilihan peran pasien atau tenaga kesehatan, email, kata sandi, dan tombol tampilkan kata sandi.",
+      "demo": false,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\08-login-provider.png",
+      "title": "Masuk sebagai tenaga kesehatan",
+      "route": "/login",
+      "note": "Pemilihan peran mengubah konteks login tanpa memindahkan formulir.",
+      "demo": false,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\09-register.png",
+      "title": "Pendaftaran pasien",
+      "route": "/register",
+      "note": "Nama, email, dan kata sandi menjadi isian utama. Akun klinis dikelola administrator.",
+      "demo": false,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\10-edukasi.png",
+      "title": "Edukasi perawatan kaki",
+      "route": "/education",
+      "note": "Kategori artikel dan panduan perawatan menjadi akses edukasi bagi pengguna.",
+      "demo": false,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\11-dashboard-pasien.png",
+      "title": "Dashboard pasien",
+      "route": "/patient/dashboard",
+      "note": "Ringkasan pemeriksaan, status, riwayat singkat, dan pintasan pemeriksaan baru.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\12-penilaian.png",
+      "title": "Informasi kesehatan",
+      "route": "/patient/assessment",
+      "note": "Enam pertanyaan Ya/Tidak menjadi konteks klinis sebelum dokumentasi foto.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\13-scan.png",
+      "title": "Pemeriksaan dan foto kaki",
+      "route": "/patient/scan?examination=4",
+      "note": "Panduan foto, Buka Kamera, Pilih Foto, dan Analisis dengan AI.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\14-hasil.png",
+      "title": "Hasil pemeriksaan",
+      "route": "/patient/result/1",
+      "note": "Hasil visual ditampilkan terpisah dari kategori risiko klinis dan status review.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\14-hasil-lanjutan.png",
+      "title": "Hasil pemeriksaan / lanjutan",
+      "route": "/patient/result/1",
+      "note": "Bagian bawah halaman memperlihatkan informasi dan tindakan lanjutan.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\14-hasil-tindak-lanjut.png",
+      "title": "Hasil pemeriksaan / tindak lanjut",
+      "route": "/patient/result/1",
+      "note": "Penilaian klinis, status review, dan tindakan pada akhir halaman.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\15-riwayat.png",
+      "title": "Riwayat pemeriksaan",
+      "route": "/patient/history",
+      "note": "Daftar pemeriksaan yang dapat dibuka kembali untuk melihat hasil dan tindak lanjut.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\16-profil.png",
+      "title": "Profil pasien",
+      "route": "/patient/profile",
+      "note": "Data identitas dan informasi diabetes dapat diperbarui dari area profil.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\17-dashboard-klinis.png",
+      "title": "Dashboard tenaga kesehatan",
+      "route": "/provider/dashboard",
+      "note": "Ringkasan klinis, antrean review menurut prioritas, dan direktori pasien.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\17-dashboard-klinis-lanjutan.png",
+      "title": "Dashboard tenaga kesehatan / lanjutan",
+      "route": "/provider/dashboard",
+      "note": "Bagian bawah halaman memperlihatkan informasi dan tindakan lanjutan.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\18-daftar-pasien.png",
+      "title": "Daftar pasien",
+      "route": "/provider/patients",
+      "note": "Pencarian nama, filter risiko, filter status review, dan akses ke profil pasien.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\19-profil-pasien.png",
+      "title": "Detail pasien",
+      "route": "/provider/patients/1",
+      "note": "Informasi pasien dan pemeriksaan terakhir ditampilkan sebagai konteks peninjauan.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\20-review.png",
+      "title": "Review pemeriksaan",
+      "route": "/provider/examinations/2",
+      "note": "Foto dan analisis visual, faktor klinis, kategori risiko, dan formulir review.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\20-review-lanjutan.png",
+      "title": "Review pemeriksaan / lanjutan",
+      "route": "/provider/examinations/2",
+      "note": "Bagian bawah halaman memperlihatkan informasi dan tindakan lanjutan.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\20-review-tindak-lanjut.png",
+      "title": "Review pemeriksaan / tindak lanjut",
+      "route": "/provider/examinations/2",
+      "note": "Penilaian klinis, status review, dan tindakan pada akhir halaman.",
+      "demo": true,
+      "mobile": false,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\21-mobile-beranda.png",
+      "title": "Mobile / beranda",
+      "route": "/",
+      "note": "Konten disusun satu kolom dengan menu yang dapat dibuka.",
+      "demo": false,
+      "mobile": true,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\22-mobile-menu.png",
+      "title": "Mobile / navigasi",
+      "route": "/",
+      "note": "Menu mobile menampilkan tautan bagian halaman dan akses akun.",
+      "demo": false,
+      "mobile": true,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\23-mobile-login.png",
+      "title": "Mobile / login",
+      "route": "/login",
+      "note": "Formulir login pada layar 390 x 844 piksel.",
+      "demo": false,
+      "mobile": true,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\24-mobile-dashboard.png",
+      "title": "Mobile / dashboard",
+      "route": "/patient/dashboard",
+      "note": "Dashboard pasien menggunakan susunan kartu satu kolom.",
+      "demo": true,
+      "mobile": true,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\25-mobile-sidebar.png",
+      "title": "Mobile / menu pasien",
+      "route": "/patient/dashboard",
+      "note": "Menu samping dibuka sebagai drawer untuk akses fitur pasien.",
+      "demo": true,
+      "mobile": true,
+      "overflow": false
+    },
+    {
+      "file": "screenshots\\26-mobile-scan.png",
+      "title": "Mobile / foto kaki",
+      "route": "/patient/scan?examination=4",
+      "note": "Alur dokumentasi foto menyesuaikan lebar layar mobile.",
+      "demo": true,
+      "mobile": true,
+      "overflow": false
+    }
+  ],
+  "errors": []
+}

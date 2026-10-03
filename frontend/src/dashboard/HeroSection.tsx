@@ -21,7 +21,7 @@ hero-badge
         <h1>Protect Every Step With Intelligent Foot Care</h1>
 
         <p>
-          FootGuard membantu melakukan pemantauan kesehatan kaki melalui
+          DIA SCAN membantu melakukan pemantauan kesehatan kaki melalui
           analisis AI untuk mendeteksi risiko lebih awal.
         </p>
 

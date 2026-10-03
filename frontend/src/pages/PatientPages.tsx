@@ -8,10 +8,13 @@ import {
   CircleAlert,
   ClipboardCheck,
   Download,
-  FileText,
   HeartHandshake,
   Home,
   Info,
+  HeartPulse,
+  UserRound,
+  Check,
+  ShieldCheck,
 } from 'lucide-react'
 import { getProfile } from '../api/auth'
 import { createAssessment, getLatestAssessment } from '../api/assessments'
@@ -26,7 +29,6 @@ import type {
   PatientUpdate,
   User
 } from '../api/types'
-import { useAuth } from '../auth/useAuth'
 import { ErrorState, LoadingState } from '../components/Feedback'
 import {
   ButtonLink,
@@ -44,6 +46,8 @@ import { dateLabel, examStatusLabel } from '../utils/format'
 import { VisualAnalysis } from '../components/VisualAnalysis'
 import { StatusBadge } from '../components/ExaminationUI'
 import { latestPhoto, visualSummary } from '../utils/examination'
+import { ExaminationComparison } from '../components/ExaminationComparison'
+import { ProfileIdentity } from '../components/ProfileIdentity'
 
 // --------------------------------------------------------------------------
 // Clinical questionnaire questions & types
@@ -86,7 +90,7 @@ async function loadDashboard(): Promise<DashboardData> {
 // ==========================================================================
 export function PatientDashboard() {
   const { value, loading, error, reload } = useResource(loadDashboard)
-  if (loading) return <LoadingState label="Memuat dashboard pasien FootGuard..." variant="dashboard" />
+  if (loading) return <LoadingState label="Memuat dashboard pasien DIA SCAN..." variant="dashboard" />
   if (error || !value) return <ErrorState message={error || 'Dashboard belum tersedia.'} retry={reload} />
   return <PatientOverview user={value.user} examinationCount={value.examinationCount} examinations={value.examinations} />
 }
@@ -125,7 +129,7 @@ export function AssessmentPage() {
       <div className="flow-card">
         <div className="assessment-context">
           <Info size={18} />
-          <span>Analisis AI tidak menentukan apakah seseorang menderita diabetes. FootGuard membantu pemantauan kaki pada pasien diabetes.</span>
+          <span>Analisis AI tidak menentukan apakah seseorang menderita diabetes. DIA SCAN membantu pemantauan kaki pada pasien diabetes.</span>
         </div>
 
         <div className="flow-intro">
@@ -204,13 +208,15 @@ export function ResultPage() {
   const photoStatus = latestPhoto(examination) ? 'Foto kaki tersedia' : 'Belum ada foto'
 
   function download() {
-    const report = `FootGuard — Ringkasan pemeriksaan
+    const report = `DIA SCAN — Ringkasan pemeriksaan
 Tanggal: ${dateLabel(examination.examination.examined_at)}
 Status: ${examStatusLabel[examination.examination.status]}
 Hasil visual: ${visualSummary(ai)}
 Kategori risiko klinis: ${risk?.risk_category || 'Belum tersedia'}
 Penjelasan klinis: ${risk?.explanation || '-'}
 Review tenaga kesehatan: ${examination.medical_review?.notes || 'Belum tersedia'}
+Kesimpulan tenaga kesehatan: ${examination.medical_review?.conclusion || '-'}
+Rekomendasi tindak lanjut: ${examination.medical_review?.followup_recommendation || '-'}
 
 Hasil ini bukan diagnosis mandiri.`
     const url = URL.createObjectURL(new Blob([report], { type: 'text/plain;charset=utf-8' }))
@@ -304,6 +310,8 @@ Hasil ini bukan diagnosis mandiri.`
               <ReviewBadge value={detail.medical_review.review_status} />
               <p className="review-date">Ditinjau {dateLabel(detail.medical_review.reviewed_at)}</p>
               <p>{detail.medical_review.notes}</p>
+              {detail.medical_review.conclusion && <p className="message-content"><strong>Kesimpulan tenaga kesehatan:</strong> {detail.medical_review.conclusion}</p>}
+              {detail.medical_review.followup_recommendation && <p className="message-content"><strong>Rekomendasi tindak lanjut:</strong> {detail.medical_review.followup_recommendation}</p>}
             </>
           ) : (
             <>
@@ -314,14 +322,15 @@ Hasil ini bukan diagnosis mandiri.`
         </section>
       </div>
 
+      <ExaminationComparison id={detail.examination.id} />
       <SafetyNote />
 
-      <div className="flow-actions">
+      <div className="flow-actions"><Link className="button button-secondary" to={`/patient/consultation?examination=${detail.examination.id}`}>Konsultasikan pemeriksaan</Link>
         <button className="button button-secondary" onClick={download}>
           <Download size={16} /> Unduh Ringkasan
         </button>
         <Link className="button button-secondary" to="/patient/assessment">Pemeriksaan Baru</Link>
-        <ButtonLink to="/patient/history">Lihat Riwayat</ButtonLink>
+        <ButtonLink to="/patient/progress">Perkembangan Kondisi</ButtonLink><ButtonLink to="/patient/history">Lihat Riwayat</ButtonLink>
       </div>
     </>
   )
@@ -486,7 +495,7 @@ export function EducationPage() {
       <section className="education-library" id="panduan">
         <div className="education-library-heading">
           <div>
-            <span className="eyebrow">PERPUSTAKAAN FOOTGUARD</span>
+            <span className="eyebrow">PERPUSTAKAAN DIA SCAN</span>
             <h2>Temukan panduan yang Anda perlukan</h2>
             <p>Pilih topik untuk menyaring materi. Setiap panduan dirancang agar dapat dibaca dalam beberapa menit.</p>
           </div>
@@ -555,7 +564,7 @@ export function EducationPage() {
       <footer className="education-public-footer">
         <Logo />
         <p>Panduan pasien untuk pemantauan kaki diabetik.</p>
-        <span>© 2026 FootGuard</span>
+        <span>© 2026 DIA SCAN</span>
       </footer>
     </div>
   )
@@ -565,11 +574,11 @@ export function EducationPage() {
 // 6. PROFILE PAGE & FORM
 // ==========================================================================
 function ProfileForm({ patient, onSaved }: { patient: Patient; onSaved: (patient: Patient) => void }) {
-  const [form, setForm] = useState<PatientUpdate>({
+  const [form, setForm] = useState<Omit<PatientUpdate, 'gender' | 'diabetes_type' | 'diagnosis_year'> & { gender: PatientUpdate['gender'] | ''; diabetes_type: PatientUpdate['diabetes_type'] | ''; diagnosis_year: number | '' }>({
     birth_date: patient.birth_date?.slice(0, 10) || '',
-    gender: patient.gender || 'male',
-    diabetes_type: patient.diabetes_type || 'type2',
-    diagnosis_year: patient.diagnosis_year || new Date().getFullYear(),
+    gender: patient.gender || '',
+    diabetes_type: patient.diabetes_type || '',
+    diagnosis_year: patient.diagnosis_year || '',
     phone: patient.phone || '',
     address: patient.address || ''
   })
@@ -580,11 +589,12 @@ function ProfileForm({ patient, onSaved }: { patient: Patient; onSaved: (patient
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (saving) return
+    if (!form.gender || !form.diabetes_type || !form.diagnosis_year) { setError('Lengkapi informasi kesehatan dan jenis kelamin.'); return }
     setSaving(true)
     setError('')
     setMessage('')
     try {
-      onSaved(await updatePatient(form))
+      onSaved(await updatePatient({ ...form, gender: form.gender, diabetes_type: form.diabetes_type, diagnosis_year: form.diagnosis_year }))
       setMessage('Profil berhasil disimpan.')
     } catch (err) {
       setError(errorText(err))
@@ -595,17 +605,18 @@ function ProfileForm({ patient, onSaved }: { patient: Patient; onSaved: (patient
 
   return (
     <form className="card profile-form" onSubmit={submit}>
-      <span className="eyebrow">DATA PROFIL</span>
+      <span className="eyebrow">DATA DIRI & KESEHATAN</span>
       <h2>Informasi Anda</h2>
       <p className="muted">Gunakan informasi yang sesuai dengan kondisi Anda saat ini.</p>
       <fieldset>
-        <legend>Informasi dasar</legend>
+        <legend><UserRound size={18} />Informasi dasar</legend>
         <div className="profile-fields">
           <label className="field">
             Tanggal lahir
             <input
               type="date"
               required
+              max={new Date().toLocaleDateString('en-CA')}
               value={form.birth_date}
               onChange={e => setForm({ ...form, birth_date: e.target.value })}
             />
@@ -613,9 +624,11 @@ function ProfileForm({ patient, onSaved }: { patient: Patient; onSaved: (patient
           <label className="field">
             Jenis kelamin
             <select
+              required
               value={form.gender}
               onChange={e => setForm({ ...form, gender: e.target.value as PatientUpdate['gender'] })}
             >
+              <option value="" disabled>Pilih jenis kelamin</option>
               <option value="male">Laki-laki</option>
               <option value="female">Perempuan</option>
               <option value="other">Lainnya</option>
@@ -624,6 +637,9 @@ function ProfileForm({ patient, onSaved }: { patient: Patient; onSaved: (patient
           <label className="field">
             Telepon
             <input
+              type="tel"
+              autoComplete="tel"
+              placeholder="Contoh: 081234567890"
               value={form.phone}
               maxLength={30}
               onChange={e => setForm({ ...form, phone: e.target.value })}
@@ -632,6 +648,9 @@ function ProfileForm({ patient, onSaved }: { patient: Patient; onSaved: (patient
           <label className="field">
             Alamat
             <input
+              autoComplete="street-address"
+              maxLength={5000}
+              placeholder="Alamat tempat tinggal"
               value={form.address}
               onChange={e => setForm({ ...form, address: e.target.value })}
             />
@@ -639,14 +658,16 @@ function ProfileForm({ patient, onSaved }: { patient: Patient; onSaved: (patient
         </div>
       </fieldset>
       <fieldset>
-        <legend>Informasi kesehatan</legend>
+        <legend><HeartPulse size={18} />Informasi kesehatan</legend>
         <div className="profile-fields">
           <label className="field">
             Tipe diabetes
             <select
+              required
               value={form.diabetes_type}
               onChange={e => setForm({ ...form, diabetes_type: e.target.value as PatientUpdate['diabetes_type'] })}
             >
+              <option value="" disabled>Pilih tipe diabetes</option>
               <option value="type1">Tipe 1</option>
               <option value="type2">Tipe 2</option>
               <option value="other">Lainnya</option>
@@ -660,22 +681,22 @@ function ProfileForm({ patient, onSaved }: { patient: Patient; onSaved: (patient
               max={new Date().getFullYear()}
               required
               value={form.diagnosis_year}
-              onChange={e => setForm({ ...form, diagnosis_year: Number(e.target.value) })}
+              placeholder="Contoh: 2020"
+              onChange={e => setForm({ ...form, diagnosis_year: e.target.value ? Number(e.target.value) : '' })}
             />
           </label>
         </div>
       </fieldset>
       {error && <p className="form-error" role="alert">{error}</p>}
       {message && <p className="success-message" role="status">{message}</p>}
-      <button className="button" type="submit" disabled={saving}>
-        {saving ? 'Menyimpan...' : 'Simpan Perubahan'} <ArrowRight size={16} />
-      </button>
+      <div className="profile-form-footer"><p><ShieldCheck size={16} />Data ini membantu tenaga kesehatan memahami kondisi Anda.</p><button className="button" type="submit" disabled={saving}>
+        <Check size={16} />{saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+      </button></div>
     </form>
   )
 }
 
 export function ProfilePage() {
-  const { user } = useAuth()
   const { value, loading, error, reload } = useResource(getPatient)
   const [updated, setUpdated] = useState<Patient | null>(null)
 
@@ -683,15 +704,15 @@ export function ProfilePage() {
   if (error || !value) return <ErrorState message={error || 'Profil belum tersedia.'} retry={reload} />
 
   const patient = updated || value
-  const initials = (user?.name || 'P').split(' ').slice(0, 2).map(word => word[0]).join('').toUpperCase()
   const complete = !!(patient.birth_date && patient.gender && patient.diabetes_type && patient.diagnosis_year)
+  const completedFields = [patient.birth_date, patient.gender, patient.diabetes_type, patient.diagnosis_year].filter(Boolean).length
 
   return (
-    <>
+    <div className="profile-page">
       <PageHeader
         eyebrow="AKUN PASIEN"
         title="Profil Saya"
-        description="Informasi dasar dan kesehatan yang memberi konteks pada pemeriksaan."
+        description="Kelola identitas, foto profil, dan informasi kesehatan Anda."
       />
       <div className={`profile-completion ${complete ? 'is-complete' : ''}`}>
         <ClipboardCheck size={21} />
@@ -699,35 +720,12 @@ export function ProfilePage() {
           <strong>{complete ? 'Informasi utama lengkap' : 'Informasi utama belum lengkap'}</strong>
           <p>{complete ? 'Perbarui data bila ada perubahan.' : 'Lengkapi tanggal lahir, jenis kelamin, tipe diabetes, dan tahun diagnosis.'}</p>
         </div>
+        <span className="profile-completion-count">{completedFields}/4 data utama</span>
       </div>
       <div className="profile-redesign-grid">
-        <aside className="card profile-identity">
-          <span className="avatar avatar-large">{initials}</span>
-          <h2>{user?.name}</h2>
-          <p>Pasien FootGuard</p>
-          <span className="profile-id">ID Pasien · {patient.id}</span>
-          <div className="profile-account">
-            <h3>Pengaturan akun</h3>
-            <div className="data-line">
-              <span>Email</span>
-              <strong>{user?.email}</strong>
-            </div>
-            <div className="data-line">
-              <span>Telepon</span>
-              <strong>{patient.phone || 'Belum diisi'}</strong>
-            </div>
-          </div>
-          <div className="profile-links">
-            <Link to="/patient/history">
-              <FileText size={18} /> Riwayat pemeriksaan <ArrowRight size={16} />
-            </Link>
-            <Link to="/patient/education">
-              <BookOpen size={18} /> Ruang edukasi <ArrowRight size={16} />
-            </Link>
-          </div>
-        </aside>
+        <ProfileIdentity patientId={patient.id} phone={patient.phone} />
         <ProfileForm key={patient.id} patient={patient} onSaved={setUpdated} />
       </div>
-    </>
+    </div>
   )
 }
