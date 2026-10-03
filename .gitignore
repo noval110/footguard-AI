@@ -46,3 +46,11 @@ artifacts/consultation-browser-runtime/
 ai-service/app/main_backup.py
 ai-service/prediction_result.png
 ai-service/temp-wound-dataset
+
+# Generated local artifacts
+artifacts/
+
+# Local generated artifacts
+artifacts/
+*.log
+frontend/tmp/
