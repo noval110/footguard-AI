@@ -68,6 +68,8 @@ func New(store *repositories.Store, auth *services.Auth, frontendOrigin, aiServi
 	consultation.GET("/conversations/:id", h.Conversation)
 	consultation.GET("/conversations/:id/messages", h.Messages)
 	consultation.POST("/conversations/:id/messages", h.SendMessage, echoMiddleware.RateLimiter(echoMiddleware.NewRateLimiterMemoryStore(3)))
+	consultation.PATCH("/conversations/:id/messages/:message_id", h.UpdateMessage, echoMiddleware.RateLimiter(echoMiddleware.NewRateLimiterMemoryStore(3)))
+	consultation.DELETE("/conversations/:id/messages/:message_id", h.DeleteMessage, echoMiddleware.RateLimiter(echoMiddleware.NewRateLimiterMemoryStore(3)))
 	consultation.POST("/conversations/:id/read", h.ReadMessages)
 	consultation.GET("/appointments", h.Appointments)
 	consultation.PATCH("/appointments/:id", h.UpdateAppointment)

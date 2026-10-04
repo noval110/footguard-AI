@@ -5,7 +5,7 @@ export interface Conversation {
   id: number; patient_id: number; patient_user_id: number; provider_id: number; examination_id: number | null
   patient_name: string; provider_name: string; last_message: string | null; unread_count: number; created_at: string; updated_at: string
 }
-export interface Message { id: number; conversation_id: number; sender_id: number; sender_name: string; message: string; created_at: string; read_at: string | null }
+export interface Message { id: number; conversation_id: number; sender_id: number; sender_name: string; message: string; created_at: string; read_at: string | null; edited_at: string | null; deleted_at: string | null }
 export type AppointmentStatus = 'requested' | 'confirmed' | 'completed' | 'cancelled'
 export interface Appointment {
   id: number; conversation_id: number; scheduled_at: string; status: AppointmentStatus; notes: string
@@ -23,8 +23,10 @@ export const listConversations = () => request<Conversation[]>('/api/conversatio
 export const getConversation = (id: number) => request<Conversation>(`/api/conversations/${id}`)
 export const createConversation = (data: { patient_id?: number; provider_id?: number; examination_id?: number }) => request<Conversation>('/api/conversations', post(data))
 export const listConsultationProviders = () => request<{ id: number; name: string }[]>('/api/consultation/providers')
-export const listMessages = (id: number, before?: number) => request<Message[]>(`/api/conversations/${id}/messages${before ? `?before=${before}` : ''}`)
+export const listMessages = (id: number, before?: number, since?: number) => request<Message[]>(`/api/conversations/${id}/messages${before ? `?before=${before}` : since ? `?since=${since}` : ''}`)
 export const sendMessage = (id: number, message: string) => request<Message>(`/api/conversations/${id}/messages`, post({ message }))
+export const updateMessage = (id: number, messageId: number, message: string) => request<Message>(`/api/conversations/${id}/messages/${messageId}`, { method: 'PATCH', body: JSON.stringify({ message }) })
+export const deleteMessage = (id: number, messageId: number) => request<Message>(`/api/conversations/${id}/messages/${messageId}`, { method: 'DELETE' })
 export const readMessages = (id: number, through_id: number) => request(`/api/conversations/${id}/read`, post({ through_id }))
 export const listAppointments = () => request<Appointment[]>('/api/appointments')
 export const createAppointment = (conversation_id: number, scheduled_at: string, notes: string) => request<Appointment>('/api/appointments', post({ conversation_id, scheduled_at, notes }))

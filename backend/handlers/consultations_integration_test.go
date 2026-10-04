@@ -21,7 +21,7 @@ import (
 func TestConsultationWorkflowWithPostgres(t *testing.T) {
 	url := os.Getenv("FOOTGUARD_TEST_DATABASE_URL")
 	if url == "" {
-		t.Skip("set FOOTGUARD_TEST_DATABASE_URL to an isolated PostgreSQL database with migrations 001–005")
+		t.Skip("set FOOTGUARD_TEST_DATABASE_URL to an isolated PostgreSQL database with migrations 001–006")
 	}
 	ctx := context.Background()
 	pool, err := database.Open(ctx, url)
@@ -75,6 +75,9 @@ func TestConsultationWorkflowWithPostgres(t *testing.T) {
 	}
 	request := func(user models.User, method, path string, body any, want int) json.RawMessage {
 		t.Helper()
+		if (method == "PATCH" || method == "DELETE") && strings.Contains(path, "/messages/") {
+			time.Sleep(350 * time.Millisecond) // Stay below the message action rate limiter.
+		}
 		data, _ := json.Marshal(body)
 		req, err := http.NewRequest(method, server.URL+path, strings.NewReader(string(data)))
 		if err != nil {
@@ -198,6 +201,76 @@ func TestConsultationWorkflowWithPostgres(t *testing.T) {
 	_ = json.Unmarshal(request(provider, "GET", base+"/messages?before="+fmt.Sprint(messages[len(messages)-1].ID), nil, 200), &messages)
 	if len(messages) != 3 {
 		t.Fatal("older history pagination mismatch")
+	}
+	messagePath := base + "/messages/" + fmt.Sprint(message.ID)
+	for _, user := range []models.User{other, unrelated, provider} {
+		request(user, "PATCH", messagePath, map[string]any{"message": "Forbidden edit"}, 404)
+		request(user, "DELETE", messagePath, nil, 404)
+	}
+	for _, text := range []string{" ", strings.Repeat("a", 3001), "bad\x00text"} {
+		request(patient, "PATCH", messagePath, map[string]any{"message": text}, 400)
+	}
+	request(patient, "PATCH", messagePath, map[string]any{"message": "Spoof", "sender_id": provider.ID}, 400)
+	request(patient, "PATCH", base+"/messages/invalid", map[string]any{"message": "Invalid"}, 400)
+	request(patient, "DELETE", base+"/messages/0", nil, 400)
+	if _, err = store.ChangeMessage(ctx, patient, conversation.ID, message.ID, " ", false); err != repositories.ErrTransition {
+		t.Fatalf("store accepted empty edit: %v", err)
+	}
+	var another models.Conversation
+	_ = json.Unmarshal(request(patient, "POST", "/api/conversations", map[string]any{"provider_id": provider.ID}, 201), &another)
+	request(patient, "PATCH", fmt.Sprintf("/api/conversations/%d/messages/%d", another.ID, message.ID), map[string]any{"message": "Wrong conversation"}, 404)
+	var edited models.Message
+	_ = json.Unmarshal(request(patient, "PATCH", messagePath, map[string]any{"message": "  Corrected message  "}, 200), &edited)
+	if edited.Message != "Corrected message" || edited.EditedAt == nil || edited.ReadAt == nil || !edited.CreatedAt.Equal(message.CreatedAt) {
+		t.Fatal("edit did not persist trimmed text, edit time, original creation time and read receipt")
+	}
+	// Loaded messages outside the newest page must also update on polling/reconnect.
+	_ = json.Unmarshal(request(provider, "GET", base+"/messages?since="+fmt.Sprint(message.ID), nil, 200), &messages)
+	if len(messages) != 53 || messages[len(messages)-1].Message != "Corrected message" {
+		t.Fatal("loaded older message edit was not returned by refresh")
+	}
+	request(patient, "GET", base+"/messages?since=-1", nil, 400)
+	request(patient, "GET", base+"/messages?since=1&before=2", nil, 400)
+	var deleted models.Message
+	_ = json.Unmarshal(request(patient, "DELETE", messagePath, nil, 200), &deleted)
+	if deleted.DeletedAt == nil || deleted.Message != "" {
+		t.Fatal("delete did not remove text and persist tombstone")
+	}
+	request(patient, "PATCH", messagePath, map[string]any{"message": "Restore"}, 404)
+	request(patient, "DELETE", messagePath, nil, 404)
+	_ = json.Unmarshal(request(provider, "GET", base+"/messages?since="+fmt.Sprint(message.ID), nil, 200), &messages)
+	if messages[len(messages)-1].DeletedAt == nil || messages[len(messages)-1].Message != "" {
+		t.Fatal("peer can still read deleted text")
+	}
+	// Provider actions use the same ownership rule and remove unread badges/notices.
+	providerMessage, err := store.SendMessage(ctx, provider, another.ID, "Provider message")
+	if err != nil {
+		t.Fatal(err)
+	}
+	providerPath := fmt.Sprintf("/api/conversations/%d/messages/%d", another.ID, providerMessage.ID)
+	request(patient, "DELETE", providerPath, nil, 404)
+	request(provider, "PATCH", providerPath, map[string]any{"message": "Provider correction"}, 200)
+	var preview models.Conversation
+	_ = json.Unmarshal(request(patient, "GET", fmt.Sprintf("/api/conversations/%d", another.ID), nil, 200), &preview)
+	if preview.UnreadCount != 1 || preview.LastMessage == nil || *preview.LastMessage != "Provider correction" {
+		t.Fatal("edit did not update conversation preview")
+	}
+	request(provider, "DELETE", providerPath, nil, 200)
+	_ = json.Unmarshal(request(patient, "GET", fmt.Sprintf("/api/conversations/%d", another.ID), nil, 200), &preview)
+	if preview.UnreadCount != 0 || preview.LastMessage == nil || *preview.LastMessage != "Pesan dihapus" {
+		t.Fatal("delete did not update preview and unread count")
+	}
+	var unreadNotices int
+	err = pool.QueryRow(ctx, `SELECT count(*) FROM notifications WHERE conversation_id=$1 AND read_at IS NULL`, another.ID).Scan(&unreadNotices)
+	if err != nil || unreadNotices != 0 {
+		t.Fatalf("stale unread notices: %d, %v", unreadNotices, err)
+	}
+	for _, kind := range []string{"message_updated", "message_deleted"} {
+		var count int
+		err = pool.QueryRow(ctx, `SELECT count(*) FROM realtime_events WHERE kind=$1 AND (payload->>'message_id')::bigint=$2 AND user_id=ANY($3)`, kind, message.ID, []int64{patient.ID, provider.ID}).Scan(&count)
+		if err != nil || count != 2 {
+			t.Fatalf("%s was not delivered to both participants: %d, %v", kind, count, err)
+		}
 	}
 	var a models.Appointment
 	schedule := time.Now().Add(24 * time.Hour).UTC()

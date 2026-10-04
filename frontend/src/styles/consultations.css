@@ -19,6 +19,19 @@
 .conversation-thread .message-composer { padding: 12px 16px; align-items: center; }
 .conversation-thread .message-composer textarea { min-height: 60px; max-height: 100px; }
 
+/* Message editing and deletion controls. */
+.message-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.message-action { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 34px; padding: 5px 9px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: #7c283f; font: inherit; font-size: 12px; cursor: pointer; }
+.message-action:hover { background: #ffffff80; border-color: #dac4cb; }
+.message-action.is-danger { color: #a42a3b; }
+.message-action:disabled { opacity: .55; cursor: default; }
+.message-editor { margin: 8px 0; }
+.message-editor textarea { display: block; width: 100%; min-width: 0; box-sizing: border-box; padding: 10px; border: 1px solid #dac4cb; border-radius: 6px; font: inherit; font-size: 14px; resize: vertical; }
+.message-delete-confirmation { margin-top: 8px; padding-top: 8px; border-top: 1px solid #dac4cb; }
+.message-delete-confirmation p { margin: 0; font-size: 12px; }
+.message-bubble.is-deleted .message-content { color: #75656c; font-style: italic; }
+.message-bubble .form-error { margin: 8px 0 0; font-size: 12px; }
+
 /* Dashboard preview: one quiet panel, with details available on demand. */
 .review-queue-preview { padding: 18px 22px; background: #fff; border: 1px solid var(--fg-border, #ece3e5); border-radius: 14px; }
 .review-queue-preview-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }

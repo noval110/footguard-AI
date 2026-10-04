@@ -15,8 +15,8 @@ var ErrTransition = errors.New("invalid state transition")
 
 const participantSQL = `(p.user_id=$1 AND $2='patient' OR c.provider_id=$1 AND $2='provider')`
 const conversationSelect = `SELECT c.id,c.patient_id,p.user_id,c.provider_id,c.examination_id,pu.name,pr.name,
-    (SELECT message FROM messages WHERE conversation_id=c.id ORDER BY id DESC LIMIT 1),
-    (SELECT count(*) FROM messages WHERE conversation_id=c.id AND sender_id<>$1 AND read_at IS NULL),c.created_at,c.updated_at
+    (SELECT CASE WHEN deleted_at IS NOT NULL THEN 'Pesan dihapus' ELSE message END FROM messages WHERE conversation_id=c.id ORDER BY id DESC LIMIT 1),
+    (SELECT count(*) FROM messages WHERE conversation_id=c.id AND sender_id<>$1 AND read_at IS NULL AND deleted_at IS NULL),c.created_at,c.updated_at
     FROM conversations c JOIN patients p ON p.id=c.patient_id JOIN users pu ON pu.id=p.user_id JOIN users pr ON pr.id=c.provider_id`
 
 func scanConversation(row pgx.Row) (models.Conversation, error) {
@@ -138,12 +138,13 @@ func notify(ctx context.Context, tx pgx.Tx, userID int64, kind string, conversat
 	return err
 }
 
-func (s *Store) Messages(ctx context.Context, user models.User, id, before int64) ([]models.Message, error) {
+func (s *Store) Messages(ctx context.Context, user models.User, id, before, since int64) ([]models.Message, error) {
 	if _, err := s.Conversation(ctx, user, id); err != nil {
 		return nil, err
 	}
-	rows, err := s.DB.Query(ctx, `SELECT m.id,m.conversation_id,m.sender_id,u.name,m.message,m.created_at,m.read_at FROM messages m JOIN users u ON u.id=m.sender_id
-        WHERE conversation_id=$1 AND ($2::bigint=0 OR m.id<$2) ORDER BY m.id DESC LIMIT 50`, id, before)
+	rows, err := s.DB.Query(ctx, `SELECT m.id,m.conversation_id,m.sender_id,u.name,m.message,m.created_at,m.read_at,m.edited_at,m.deleted_at FROM messages m JOIN users u ON u.id=m.sender_id
+        WHERE conversation_id=$1 AND ($2::bigint=0 OR m.id<$2) AND ($3::bigint=0 OR m.id>=$3)
+        ORDER BY m.id DESC LIMIT CASE WHEN $3::bigint=0 THEN 50 ELSE 500 END`, id, before, since)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +152,7 @@ func (s *Store) Messages(ctx context.Context, user models.User, id, before int64
 	out := make([]models.Message, 0)
 	for rows.Next() {
 		var m models.Message
-		if err = rows.Scan(&m.ID, &m.ConversationID, &m.SenderID, &m.SenderName, &m.Message, &m.CreatedAt, &m.ReadAt); err != nil {
+		if err = rows.Scan(&m.ID, &m.ConversationID, &m.SenderID, &m.SenderName, &m.Message, &m.CreatedAt, &m.ReadAt, &m.EditedAt, &m.DeletedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, m)
@@ -196,6 +197,53 @@ func (s *Store) SendMessage(ctx context.Context, user models.User, id int64, mes
 	return m, tx.Commit(ctx)
 }
 
+// Both actions require membership and ownership, and commit with their delivery events.
+func (s *Store) ChangeMessage(ctx context.Context, user models.User, conversationID, messageID int64, message string, remove bool) (models.Message, error) {
+	message = strings.TrimSpace(message)
+	if !remove && !services.ValidMessage(message) {
+		return models.Message{}, ErrTransition
+	}
+	tx, err := s.DB.Begin(ctx)
+	if err != nil {
+		return models.Message{}, err
+	}
+	defer tx.Rollback(ctx)
+	c, err := lockConversation(ctx, tx, user, conversationID)
+	if err != nil {
+		return models.Message{}, err
+	}
+	query := `UPDATE messages SET message=$4,edited_at=clock_timestamp()
+        WHERE conversation_id=$1 AND id=$2 AND sender_id=$3 AND deleted_at IS NULL`
+	kind := "message_updated"
+	if remove {
+		message = ""
+		query = `UPDATE messages SET message=$4,deleted_at=clock_timestamp()
+            WHERE conversation_id=$1 AND id=$2 AND sender_id=$3 AND deleted_at IS NULL`
+		kind = "message_deleted"
+	}
+	var m models.Message
+	m.SenderName = user.Name
+	err = tx.QueryRow(ctx, query+` RETURNING id,conversation_id,sender_id,message,created_at,read_at,edited_at,deleted_at`, conversationID, messageID, user.ID, message).
+		Scan(&m.ID, &m.ConversationID, &m.SenderID, &m.Message, &m.CreatedAt, &m.ReadAt, &m.EditedAt, &m.DeletedAt)
+	if err != nil {
+		return m, one(err)
+	}
+	if _, err = tx.Exec(ctx, `UPDATE conversations SET updated_at=now() WHERE id=$1`, conversationID); err != nil {
+		return m, err
+	}
+	if remove {
+		// Clear stale message notices once there are no remaining unread messages.
+		if _, err = tx.Exec(ctx, `UPDATE notifications SET read_at=now() WHERE conversation_id=$1 AND kind='message' AND read_at IS NULL
+            AND NOT EXISTS(SELECT 1 FROM messages WHERE conversation_id=$1 AND sender_id<>notifications.user_id AND read_at IS NULL AND deleted_at IS NULL)`, conversationID); err != nil {
+			return m, err
+		}
+	}
+	if err = emit(ctx, tx, []int64{c.PatientUserID, c.ProviderID}, kind, map[string]any{"conversation_id": conversationID, "message_id": messageID}, false); err != nil {
+		return m, err
+	}
+	return m, tx.Commit(ctx)
+}
+
 func (s *Store) ReadMessages(ctx context.Context, user models.User, id, through int64) error {
 	tx, err := s.DB.Begin(ctx)
 	if err != nil {
@@ -206,11 +254,11 @@ func (s *Store) ReadMessages(ctx context.Context, user models.User, id, through 
 	if err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, `UPDATE messages SET read_at=now() WHERE conversation_id=$1 AND sender_id<>$2 AND id<=$3 AND read_at IS NULL`, id, user.ID, through); err != nil {
+	if _, err = tx.Exec(ctx, `UPDATE messages SET read_at=now() WHERE conversation_id=$1 AND sender_id<>$2 AND id<=$3 AND read_at IS NULL AND deleted_at IS NULL`, id, user.ID, through); err != nil {
 		return err
 	}
 	if _, err = tx.Exec(ctx, `UPDATE notifications SET read_at=now() WHERE user_id=$1 AND conversation_id=$2 AND kind='message' AND read_at IS NULL
-        AND NOT EXISTS(SELECT 1 FROM messages WHERE conversation_id=$2 AND sender_id<>$1 AND read_at IS NULL)`, user.ID, id); err != nil {
+        AND NOT EXISTS(SELECT 1 FROM messages WHERE conversation_id=$2 AND sender_id<>$1 AND read_at IS NULL AND deleted_at IS NULL)`, user.ID, id); err != nil {
 		return err
 	}
 	if err = emit(ctx, tx, []int64{c.PatientUserID, c.ProviderID}, "messages_read", map[string]any{"conversation_id": id}, false); err != nil {

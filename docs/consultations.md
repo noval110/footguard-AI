@@ -67,6 +67,9 @@ Success/error envelopes are unchanged. Private REST routes require `Authorizatio
 | `GET /api/conversations/:id` | Participants only |
 | `GET /api/conversations/:id/messages?before=<message-id>` | Participants; newest 50, descending ID |
 | `POST /api/conversations/:id/messages` | Participants; `{message}`; sender from JWT |
+| `GET /api/conversations/:id/messages?since=<oldest-loaded-id>` | Participants; refresh up to 500 loaded messages, including edits/deletions; cannot combine with `before` |
+| `PATCH /api/conversations/:id/messages/:message_id` | Message sender only; `{message}`; 1–3000 characters; persists `edited_at` |
+| `DELETE /api/conversations/:id/messages/:message_id` | Message sender only; removes text, persists `deleted_at`, keeps history marker |
 | `POST /api/conversations/:id/read` | Participants; `{through_id}`; marks only received/displayed messages |
 | `GET /api/appointments` | Participant appointments, active first; limit 100 |
 | `POST /api/appointments` | Patient; `{conversation_id,scheduled_at,notes}` |
@@ -90,6 +93,8 @@ Browser → authenticated REST ticket → origin-checked WebSocket → `{ticket,
 Message writes, notification creation, and delivery events commit together. Chat events contain message/conversation IDs rather than message contents. Events are addressed only to the two stored participants; each socket queries only its authenticated user's events every second. This database-backed event transport works across replicas without a process-local broadcast hub or extra broker. PostgreSQL advisory transaction locks serialize event ID allocation through commit so cursor delivery cannot skip an earlier uncommitted event.
 
 React reconnects with bounded backoff and resumes its cursor during the same mounted session. REST remains authoritative; conversation/message/appointment views refresh periodically, including a five-second chat fallback while disconnected. Message history is paginated and kept bounded in the browser. No user HTML is rendered; React renders message strings as text.
+
+Message actions require migration `006_message_actions.sql` after `005`, before starting the updated backend. Both participants can edit/delete only their own messages, enforced by the authenticated sender and conversation membership in PostgreSQL. Deleted messages cannot be edited or deleted again. Edits preserve creation/read timestamps and display “Diedit”; deletion clears the text and displays “Pesan dihapus” to both participants after confirmation. Conversation previews, unread counts, and stale message notifications update too. `message_updated` and `message_deleted` events contain IDs only and commit with the changes. Refresh includes loaded older messages (up to 500), so reconnect/polling recovers changes outside the newest page. Keep migration 006 in place for application rollback; its columns are additive and old clients can still read active messages.
 
 Events persist for one day; SDP/ICE signals expire after two minutes. Expired rows are cleaned in bounded batches during ticket issuance. Expiry immediately excludes delivery; deletion follows cleanup. Use an operational cleanup job if the system has long periods without socket activity. Notifications remain in PostgreSQL with read timestamps; the current UI displays the latest 50, and the message badge counts unread messages from the latest 100 conversations. A global unread count across an arbitrarily large conversation archive is outside this bounded MVP.
 
@@ -127,7 +132,7 @@ Configure coturn with `use-auth-secret`, `static-auth-secret` from your secret m
 
 ## Local run and verification
 
-Use the existing backend and frontend setup instructions. Apply migrations 001–005 to a **local isolated test database**. Configure backend database/JWT/CORS/AI URL and frontend `VITE_API_URL` as before. Use real local accounts and provision a provider through `go run ./cmd/create-provider`. Start `go run ./cmd` and `npm run dev`. No AI rebuild is required.
+Use the existing backend and frontend setup instructions. Apply migrations 001–006 to a **local isolated test database**. Configure backend database/JWT/CORS/AI URL and frontend `VITE_API_URL` as before. Use real local accounts and provision a provider through `go run ./cmd/create-provider`. Start `go run ./cmd` and `npm run dev`. No AI rebuild is required.
 
 ```powershell
 # backend directory
@@ -171,3 +176,5 @@ docker push $taskImageTag
 Restore the previous Vercel frontend deployment and redeploy the previous JustRunMy backend image. Keep migration 005 and the new communication data in place: the prior backend does not use the new tables, and additive columns with defaults remain compatible. Do not run destructive DROP statements or restore an older database over newly stored communications for an ordinary application rollback. Use the checked backup/restore process only for an actual database incident. Restore previous environment settings if those were changed; keep uploads and the unchanged AI service available.
 
 No production database migration, Docker push, JustRunMy deployment, Vercel push, or AI deployment was performed by this change.
+
+For message actions, apply `006_message_actions.sql` after `005` before deploying the updated backend, then deploy the frontend. The focused `scripts/message-actions-browser-check.cjs` uses the same isolated local services/database as the consultation harness. It verifies sender-only controls, cancel/blank validation, retry after failed save, both-direction edits/deletes, persistence after reload, loaded older-message synchronization, and layouts at 360/390/768/1440px. Results/screenshots are written to `artifacts/message-actions-browser`.

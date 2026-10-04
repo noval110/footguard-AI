@@ -27,6 +27,8 @@ type Message struct {
 	Message        string     `json:"message"`
 	CreatedAt      time.Time  `json:"created_at"`
 	ReadAt         *time.Time `json:"read_at"`
+	EditedAt       *time.Time `json:"edited_at"`
+	DeletedAt      *time.Time `json:"deleted_at"`
 }
 
 type Appointment struct {

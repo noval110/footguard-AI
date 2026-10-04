@@ -78,7 +78,14 @@ func (h *Handler) Messages(c echo.Context) error {
 			return fail(c, 400, "Halaman pesan tidak valid.")
 		}
 	}
-	result, err := h.Store.Messages(c.Request().Context(), appmiddleware.User(c), id, before)
+	var since int64
+	if value := c.QueryParam("since"); value != "" {
+		since, err = strconv.ParseInt(value, 10, 64)
+		if err != nil || since <= 0 || before != 0 {
+			return fail(c, 400, "Batas pembaruan pesan tidak valid.")
+		}
+	}
+	result, err := h.Store.Messages(c.Request().Context(), appmiddleware.User(c), id, before, since)
 	if err != nil {
 		return consultationError(c, err)
 	}
@@ -101,6 +108,36 @@ func (h *Handler) SendMessage(c echo.Context) error {
 	}
 	return success(c, 201, result)
 }
+func (h *Handler) UpdateMessage(c echo.Context) error {
+	return h.changeMessage(c, false)
+}
+
+func (h *Handler) DeleteMessage(c echo.Context) error {
+	return h.changeMessage(c, true)
+}
+
+func (h *Handler) changeMessage(c echo.Context, remove bool) error {
+	id, err := idParam(c)
+	messageID, messageErr := strconv.ParseInt(c.Param("message_id"), 10, 64)
+	if err != nil || messageErr != nil || messageID <= 0 {
+		return fail(c, 400, "ID percakapan atau pesan tidak valid.")
+	}
+	var body struct {
+		Message string `json:"message"`
+	}
+	if !remove && (decode(c, &body) != nil || !services.ValidMessage(body.Message)) {
+		return fail(c, 400, "Pesan harus berisi 1–3000 karakter.")
+	}
+	result, err := h.Store.ChangeMessage(c.Request().Context(), appmiddleware.User(c), id, messageID, body.Message, remove)
+	if errors.Is(err, repositories.ErrNotFound) {
+		return fail(c, 404, "Pesan tidak tersedia atau Anda tidak memiliki akses.")
+	}
+	if err != nil {
+		return consultationError(c, err)
+	}
+	return success(c, 200, result)
+}
+
 func (h *Handler) ReadMessages(c echo.Context) error {
 	id, err := idParam(c)
 	if err != nil {

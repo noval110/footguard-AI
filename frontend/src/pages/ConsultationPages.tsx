@@ -29,7 +29,7 @@ export function ConsultationPage() {
     return () => { active = false }
   }, [id])
   useEffect(() => {
-    const unsubscribe = subscribe(event => { if (['message', 'messages_read', 'appointment'].includes(event.kind)) reload() })
+    const unsubscribe = subscribe(event => { if (['message', 'message_updated', 'message_deleted', 'messages_read', 'appointment'].includes(event.kind)) reload() })
     const interval = setInterval(reload, 30000)
     return () => { unsubscribe(); clearInterval(interval) }
   }, [subscribe, reload])

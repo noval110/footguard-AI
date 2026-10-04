@@ -48,6 +48,7 @@ func TestConsultationEndpointsRequireJWT(t *testing.T) {
 	e := New(nil, services.NewAuth("a-test-secret-with-at-least-32-characters"), "http://localhost:5173", "http://127.0.0.1:8000")
 	for _, route := range []struct{ method, path string }{
 		{"GET", "/api/conversations"}, {"POST", "/api/conversations"}, {"GET", "/api/conversations/1/messages"}, {"POST", "/api/conversations/1/messages"}, {"POST", "/api/conversations/1/read"},
+		{"PATCH", "/api/conversations/1/messages/1"}, {"DELETE", "/api/conversations/1/messages/1"},
 		{"GET", "/api/appointments"}, {"POST", "/api/appointments"}, {"PATCH", "/api/appointments/1"}, {"POST", "/api/calls"}, {"PATCH", "/api/calls/1"},
 		{"GET", "/api/calls/ice-config"}, {"POST", "/api/realtime/ticket"}, {"GET", "/api/progress"}, {"GET", "/api/provider/review-queue"}, {"GET", "/api/notifications"},
 	} {

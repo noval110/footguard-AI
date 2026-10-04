@@ -2,6 +2,8 @@
 
 Monitoring, secure consultations, appointments, WebSocket delivery, audio calls, migration `005`, environment variables, verification, production deployment, and rollback are documented in [DIA SCAN consultations](../docs/consultations.md). Apply migration `005_monitoring_consultations.sql` after `004` before running the extended backend. The AI service and existing authentication remain compatible.
 
+Message editing/deletion additionally requires `006_message_actions.sql` after `005`. Senders can edit or delete their own messages; deletion removes the text and keeps a “Pesan dihapus” marker for both participants. Apply this migration before deploying the updated backend/frontend.
+
 Go/Echo API for diabetic foot screening and monitoring. PostgreSQL stores clinical assessments, foot image metadata, visual AI findings, clinical risk results, and medical reviews separately. This service does not diagnose diabetes or calculate a medical risk category.
 
 ## Requirements
@@ -27,6 +29,8 @@ From `C:\footguard\backend`:
    psql -h localhost -U footguard -d footguard -v ON_ERROR_STOP=1 -f migrations/002_ai_persistence.sql
    psql -h localhost -U footguard -d footguard -v ON_ERROR_STOP=1 -f migrations/003_google_identity.sql
    psql -h localhost -U footguard -d footguard -v ON_ERROR_STOP=1 -f migrations/004_neutral_foot_image.sql
+   psql -h localhost -U footguard -d footguard -v ON_ERROR_STOP=1 -f migrations/005_monitoring_consultations.sql
+   psql -h localhost -U footguard -d footguard -v ON_ERROR_STOP=1 -f migrations/006_message_actions.sql
    ```
 
 3. Copy `.env.example` to `.env` locally and set a real database password and a random JWT secret of at least 32 characters. Do not commit `.env`.
@@ -47,6 +51,8 @@ When FastAPI runs locally on port `8000`, set `AI_SERVICE_URL=http://127.0.0.1:8
 Neon stores image metadata, not the uploaded image files. Connecting a local backend to Neon does not download the production `UPLOAD_DIR/original` and `UPLOAD_DIR/overlay` files. Missing files return `404`; restore the corresponding upload files from the server or backup to the configured upload directory, preserving their filenames. Existing images cannot be recovered from database metadata alone.
 
 If `/api/conversations` returns `404`, restart the backend with the current source. Missing migration `005` is a separate database issue; check its tables before applying it, and obtain deployment authorization before changing production databases. A `401` on `/api/profile` requires signing in again with a valid session.
+
+If `/api/conversations` returns `500` after adding message editing/deletion, check migration `006`: the new queries require `messages.edited_at` and `messages.deleted_at`. From the backend directory, `go run ./cmd/migrate-messages` reads the configured database and reports the missing columns without changing it. After approving that database as the migration target, `go run ./cmd/migrate-messages -apply` applies migration 006 in a transaction and preserves existing messages. It skips the migration when both columns already exist. A local backend may still use the production Neon database through `.env`; inspect that target before applying.
 
 If saving a profile photo returns `403` while patient pages still work, check whether the local backend process is an old executable that predates `/api/profile/photo`. A missing route can fall through a role-protected group and return a misleading permission error. Rebuild/restart the local backend from the current source on the actual frontend API port. Tests against a different backend port do not update the running process. Keep the same database, JWT secret, and upload directory; changing roles or removing JWT checks is unnecessary.
 
