@@ -54,3 +54,4 @@ artifacts/
 artifacts/
 *.log
 frontend/tmp/
+scripts/*-browser-check.cjs
