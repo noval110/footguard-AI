@@ -15,6 +15,7 @@ import torch.nn as nn
 from albumentations.pytorch import ToTensorV2
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from torchvision.models import efficientnet_b0
+from ultralytics import YOLO
 
 
 app = FastAPI(
@@ -36,6 +37,10 @@ SEGMENTATION_MODEL_PATH = (
 
 CLASSIFIER_MODEL_PATH = (
     WEIGHTS_DIR / "normal_wound_classifier.pth"
+)
+
+DFU_DETECTOR_MODEL_PATH = (
+    WEIGHTS_DIR / "dfu_detector_v1.pt"
 )
 
 DEVICE = (
@@ -101,6 +106,15 @@ classifier_transform = A.Compose([
 
 
 # ============================================================
+# LOAD DFU DETECTOR
+# ============================================================
+
+dfu_detector = YOLO(
+    str(DFU_DETECTOR_MODEL_PATH)
+)
+
+
+# ============================================================
 # LOAD WOUND SEGMENTATION MODEL
 # ============================================================
 
@@ -139,6 +153,43 @@ segmentation_transform = A.Compose([
 # ============================================================
 # HELPERS
 # ============================================================
+
+def detect_dfu(image):
+    results = dfu_detector.predict(
+        source=image,
+        conf=0.25,
+        imgsz=512,
+        verbose=False,
+        device=0 if torch.cuda.is_available() else "cpu",
+    )
+
+    detections = []
+
+    if not results:
+        return detections
+
+    result = results[0]
+
+    if result.boxes is None:
+        return detections
+
+    for box in result.boxes:
+        x1, y1, x2, y2 = box.xyxy[0].cpu().tolist()
+        confidence = float(box.conf[0].cpu().item())
+
+        detections.append({
+            "label": "DFU",
+            "confidence": round(confidence, 4),
+            "box": {
+                "x1": round(x1, 2),
+                "y1": round(y1, 2),
+                "x2": round(x2, 2),
+                "y2": round(y2, 2),
+            },
+        })
+
+    return detections
+
 
 def image_to_base64(image):
     success, buffer = cv2.imencode(
@@ -196,7 +247,10 @@ def classify_image(rgb_image):
     )
 
 
-def segment_wound(original):
+def segment_wound(
+    original,
+    dfu_detections=None,
+):
     # ========================================================
     # PREPROCESS IMAGE
     # ========================================================
@@ -329,6 +383,78 @@ def segment_wound(original):
         )
 
     # ========================================================
+    # DRAW DFU DETECTION BOXES
+    # ========================================================
+
+    if dfu_detections:
+        height, width = original.shape[:2]
+
+        for detection in dfu_detections:
+            box = detection["box"]
+
+            x1 = max(
+                0,
+                min(
+                    int(box["x1"]),
+                    width - 1,
+                ),
+            )
+
+            y1 = max(
+                0,
+                min(
+                    int(box["y1"]),
+                    height - 1,
+                ),
+            )
+
+            x2 = max(
+                0,
+                min(
+                    int(box["x2"]),
+                    width - 1,
+                ),
+            )
+
+            y2 = max(
+                0,
+                min(
+                    int(box["y2"]),
+                    height - 1,
+                ),
+            )
+
+            confidence = detection[
+                "confidence"
+            ]
+
+            cv2.rectangle(
+                result_image,
+                (x1, y1),
+                (x2, y2),
+                (0, 255, 0),
+                3,
+            )
+
+            label = (
+                f"DFU {confidence:.2f}"
+            )
+
+            cv2.putText(
+                result_image,
+                label,
+                (
+                    x1,
+                    max(y1 - 10, 20),
+                ),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (0, 255, 0),
+                2,
+                cv2.LINE_AA,
+            )
+
+    # ========================================================
     # RETURN RESULT
     # ========================================================
 
@@ -364,6 +490,7 @@ def health():
         "service": "footguard-ai",
         "device": DEVICE,
         "classifier_loaded": True,
+        "dfu_detector_loaded": True,
         "segmentation_model_loaded": True,
         "classifier_classes": CLASS_NAMES,
     }
@@ -440,6 +567,11 @@ async def analyze(
                     classifier_confidence,
                     4,
                 ),
+
+                "dfu_detected": False,
+                "dfu_detection_count": 0,
+                "dfu_detections": [],
+
                 "ulcer_detected": False,
                 "ulcer_area_percent": 0.0,
                 "confidence": 0.0,
@@ -458,11 +590,22 @@ async def analyze(
         }
 
     # ========================================================
-    # STEP 3: WOUND → SEGMENTATION
+    # STEP 3: WOUND → DFU DETECTION
+    # ========================================================
+
+    dfu_detections = detect_dfu(
+        original
+    )
+
+    # ========================================================
+    # STEP 4: WOUND → SEGMENTATION
     # ========================================================
 
     segmentation_result = (
-        segment_wound(original)
+        segment_wound(
+            original,
+            dfu_detections,
+        )
     )
 
     return {
@@ -472,6 +615,16 @@ async def analyze(
             "classification_confidence": round(
                 classifier_confidence,
                 4,
+            ),
+
+            "dfu_detected": (
+                len(dfu_detections) > 0
+            ),
+            "dfu_detection_count": len(
+                dfu_detections
+            ),
+            "dfu_detections": (
+                dfu_detections
             ),
 
             **segmentation_result,
