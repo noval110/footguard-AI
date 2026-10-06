@@ -21,6 +21,7 @@ import './styles/loading.css'
 import './styles/scan.css'
 import './styles/profile.css'
 import './styles/care-ui.css'
+import './styles/examination-comparison.css'
 
 export default function App() {
   return <BrowserRouter><AuthProvider><Routes>
