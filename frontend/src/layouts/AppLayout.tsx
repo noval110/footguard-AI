@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { ArrowRight, BookOpen, CalendarDays, ClipboardList, Footprints, History, Home, LayoutDashboard, LogOut, Menu, MessageSquare, ScanLine, ShieldCheck, TrendingUp, UserRound, Users, X } from 'lucide-react'
+import { ArrowRight, BookOpen, CalendarDays, ClipboardList, History, Home, LayoutDashboard, LogOut, Menu, MessageSquare, ScanLine, ShieldCheck, TrendingUp, UserRound, Users, X } from 'lucide-react'
 import { useAuth } from '../auth/useAuth'
 import { useCare } from '../care/useCare'
 import { CareNotifications } from '../components/CareNotifications'
 import { UserAvatar } from '../components/UserAvatar'
+import { BrandMark } from '../components/BrandMark'
 
 const patientMenu = [
   { label: 'Dashboard', path: '/patient/dashboard', icon: LayoutDashboard },
@@ -84,7 +85,7 @@ export function AppLayout({ role = 'patient' }: { role?: 'patient' | 'provider' 
     <a className="app-skip" href="#app-content">Lewati ke konten utama</a>
     {mobileOpen && <button className="fresh-drawer-backdrop" type="button" tabIndex={-1} onClick={() => setMobileOpen(false)} aria-label="Tutup navigasi" />}
     <aside ref={drawer} id="app-navigation" className={`fresh-sidebar${mobileOpen ? ' is-open' : ''}`} role={mobileOpen ? 'dialog' : undefined} aria-modal={mobileOpen || undefined} aria-label="Navigasi DIA SCAN">
-      <div className="fresh-brand-row"><Link className="fresh-brand" to={`/${role}/dashboard`} onClick={() => setMobileOpen(false)}><Footprints size={28} /><span>DIA SCAN<small>Pemantauan kaki diabetik</small></span></Link><button type="button" className="fresh-drawer-close" onClick={() => setMobileOpen(false)} aria-label="Tutup menu navigasi"><X size={20} /></button></div>
+      <div className="fresh-brand-row"><Link className="fresh-brand" to={`/${role}/dashboard`} onClick={() => setMobileOpen(false)}><BrandMark size={36} /><span>DIA SCAN<small>Pemantauan kaki diabetik</small></span></Link><button type="button" className="fresh-drawer-close" onClick={() => setMobileOpen(false)} aria-label="Tutup menu navigasi"><X size={20} /></button></div>
       <span className="fresh-nav-label">{patient ? 'RUANG PASIEN' : 'RUANG TENAGA KESEHATAN'}</span>
       <nav aria-label="Menu utama">{menu.map(({ label, path, icon: Icon }) => {
         const active = path === location.pathname + location.hash

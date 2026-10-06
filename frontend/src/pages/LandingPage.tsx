@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowDown, ArrowRight, CalendarDays, Camera, ChartNoAxesColumnIncreasing, Check, ChevronRight, ClipboardCheck, Footprints, Hand, Menu, ScanLine, ShieldCheck, Stethoscope, Users, X } from 'lucide-react'
+import { ArrowDown, ArrowRight, Bell, BookOpen, CalendarDays, Camera, ChartNoAxesColumnIncreasing, Check, ChevronRight, ClipboardCheck, Footprints, Hand, Menu, MessageSquare, ScanLine, ShieldCheck, Stethoscope, UserRound, Users, X } from 'lucide-react'
 import { ButtonLink, Logo } from '../components/UI'
-import { ApplicationPreview, AreaPreview, HistoryPreview, ProviderPreview, ResultPreview, type PreviewView } from '../components/LandingPreviews'
+import { ApplicationPreview, AreaPreview, ConsultationPreview, EducationPreview, HistoryPreview, ProgressPreview, ProviderPreview, ResultPreview, SchedulePreview, type PreviewView } from '../components/LandingPreviews'
 import hero from '../assets/editorial-feet.png'
 import '../styles/landing.css'
 
@@ -88,7 +88,7 @@ function HeroSection() {
     <div className="lp-hero-copy">
       <span className="lp-pill"><ShieldCheck size={14} aria-hidden="true" />Langkah kecil untuk hidup lebih sehat</span>
       <h1 id="landing-title">Pantau Kesehatan<br />Kaki Diabetik<br /><span>dengan Lebih Tenang.</span></h1>
-      <p>Kenali kondisi kaki Anda melalui analisis foto, penilaian risiko klinis, dan review tenaga kesehatan. Satu tempat untuk pemantauan yang lebih teratur.</p>
+      <p>Dokumentasikan kondisi kaki, bandingkan pemeriksaan, dan lanjutkan konsultasi dengan tenaga kesehatan melalui chat atau panggilan suara. Dari pemeriksaan hingga tindak lanjut, dalam satu tempat.</p>
       <div className="lp-hero-actions"><ButtonLink to="/patient/assessment">Mulai Sekarang</ButtonLink><a className="lp-learn-link" href="#cara-kerja"><span><ArrowDown size={17} aria-hidden="true" /></span>Pelajari Lebih Lanjut</a></div>
       <span className="lp-hero-note"><Users size={17} aria-hidden="true" />Mendampingi pasien dan tenaga kesehatan<br />dalam setiap langkah perawatan.</span>
     </div>
@@ -105,7 +105,7 @@ const benefits = [
   { icon: Camera, title: 'Pemeriksaan lebih praktis', text: 'Dokumentasikan kondisi kaki melalui foto.' },
   { icon: ChartNoAxesColumnIncreasing, title: 'Riwayat tersimpan', text: 'Pantau kondisi kaki dari waktu ke waktu.' },
   { icon: Users, title: 'Review tenaga kesehatan', text: 'Hasil dapat ditinjau tenaga kesehatan.' },
-  { icon: ShieldCheck, title: 'Area yang perlu diperhatikan', text: 'Visualisasi jelas untuk membantu peninjauan.' },
+  { icon: MessageSquare, title: 'Konsultasi terhubung', text: 'Lanjutkan tindak lanjut lewat chat dan suara.' },
 ]
 
 function TrustStrip() {
@@ -116,7 +116,7 @@ const steps = [
   { icon: Camera, title: 'Ambil Foto Kaki', text: 'Lengkapi data klinis, lalu unggah satu foto kaki dengan pencahayaan yang cukup.' },
   { icon: ScanLine, title: 'Analisis Sistem', text: 'AI membantu mengenali temuan visual dan menandai area yang perlu diperhatikan.' },
   { icon: ClipboardCheck, title: 'Penilaian Risiko Kaki Diabetik', text: 'Informasi klinis melengkapi pemeriksaan untuk penilaian risiko kaki diabetik.' },
-  { icon: Stethoscope, title: 'Review Tenaga Kesehatan', text: 'Tenaga kesehatan dapat meninjau pemeriksaan dan memberikan catatan tindak lanjut.' },
+  { icon: Stethoscope, title: 'Review & Tindak Lanjut', text: 'Baca review dan pantau pemeriksaan berikutnya. Lanjutkan dengan chat, panggilan suara, atau jadwal konsultasi.' },
 ]
 
 function HowItWorks() {
@@ -130,13 +130,21 @@ const features = [
   { icon: ShieldCheck, title: 'Hasil Pemeriksaan', text: 'Temuan visual dan risiko klinis disajikan dengan jelas.', preview: <ResultPreview /> },
   { icon: CalendarDays, title: 'Riwayat Pemeriksaan', text: 'Buka kembali catatan kondisi kaki Anda dari waktu ke waktu.', preview: <HistoryPreview /> },
   { icon: ScanLine, title: 'Area yang Ditandai', text: 'Visualisasi area pada foto untuk membantu peninjauan.', preview: <AreaPreview /> },
-  { icon: Users, title: 'Dashboard Tenaga Kesehatan', text: 'Tinjau pemeriksaan pasien dan catat tindak lanjut klinis.', preview: <ProviderPreview /> },
+  { icon: ChartNoAxesColumnIncreasing, title: 'Perkembangan & Perbandingan', text: 'Ikuti riwayat risiko dan bandingkan foto serta catatan dua pemeriksaan.', preview: <ProgressPreview /> },
+  { icon: MessageSquare, title: 'Chat & Panggilan Suara', text: 'Diskusikan pemeriksaan, lihat status dibaca, serta edit atau hapus pesan sendiri.', preview: <ConsultationPreview /> },
+  { icon: CalendarDays, title: 'Jadwal Konsultasi', text: 'Ajukan jadwal, pantau konfirmasi, dan terima notifikasi pembaruan konsultasi.', preview: <SchedulePreview /> },
+  { icon: Users, title: 'Antrean Review & Pasien', text: 'Tinjau pemeriksaan, tulis kesimpulan, dan catat rekomendasi tindak lanjut.', preview: <ProviderPreview /> },
+  { icon: BookOpen, title: 'Edukasi Perawatan Kaki', text: 'Temukan panduan perawatan harian, foto kaki, dan kapan mencari bantuan.', preview: <EducationPreview /> },
 ]
 
 function FeaturesSection() {
   return <section className="lp-feature-section" id="fitur" tabIndex={-1} aria-labelledby="features-title"><div className="lp-container lp-section">
-    <div className="lp-section-heading"><div><span className="lp-eyebrow">SOLUSI LENGKAP</span><h2 id="features-title">Fitur Utama DIA SCAN</h2><p>Catatan yang saling terhubung.<br />Pemantauan yang lebih mudah dipahami.</p></div><span className="lp-example-note">Pratinjau dengan data ilustrasi</span></div>
+    <div className="lp-section-heading"><div><span className="lp-eyebrow">PEMERIKSAAN HINGGA TINDAK LANJUT</span><h2 id="features-title">Fitur Utama DIA SCAN</h2><p>Analisis foto, pemantauan berkala, dan konsultasi.<br />Terhubung untuk mendampingi setiap langkah perawatan.</p></div><span className="lp-example-note">Pratinjau dengan data ilustrasi</span></div>
     <div className="lp-features">{features.map(({ icon: Icon, title, text, preview }) => <article className="lp-feature" key={title}><div className="lp-feature-heading"><span className="lp-icon"><Icon size={21} aria-hidden="true" /></span><div><h3>{title}</h3><p>{text}</p></div></div><div className="lp-feature-preview">{preview}</div></article>)}</div>
+    <div className="lp-supporting-features">
+      <div><Bell size={19} aria-hidden="true" /><span><strong>Notifikasi pembaruan</strong>Pesan baru, status jadwal, dan hasil review tersedia dari akun Anda.</span></div>
+      <div><UserRound size={19} aria-hidden="true" /><span><strong>Profil dengan foto</strong>Lengkapi data diri dan kelola foto profil pasien atau tenaga kesehatan.</span></div>
+    </div>
   </div></section>
 }
 
@@ -144,8 +152,8 @@ function WhyFootGuard() {
   return <section className="lp-why lp-container" id="tentang" tabIndex={-1} aria-labelledby="why-title"><div><span className="lp-eyebrow">KEPERCAYAAN UNTUK SETIAP LANGKAH</span><h2 id="why-title">Mengapa Memilih<br />DIA SCAN?</h2><p>Teknologi yang dekat dengan kebutuhan Anda, dengan perawatan sebagai pusatnya.</p></div><div className="lp-values">{[
     { icon: Hand, title: 'Mudah digunakan', text: 'Alur sederhana untuk memulai dan melihat hasil pemeriksaan.' },
     { icon: CalendarDays, title: 'Monitoring berkala', text: 'Catatan tersimpan untuk mendukung pemantauan rutin.' },
-    { icon: Stethoscope, title: 'Dukungan tenaga kesehatan', text: 'Peninjauan klinis tetap menjadi bagian dari perawatan.' },
-    { icon: ScanLine, title: 'Hasil visual yang jelas', text: 'Foto dan area yang ditandai lebih mudah dipahami.' },
+    { icon: MessageSquare, title: 'Tindak lanjut terhubung', text: 'Chat, panggilan suara, dan jadwal konsultasi dalam akun Anda.' },
+    { icon: BookOpen, title: 'Panduan perawatan', text: 'Edukasi yang mudah dibuka untuk mendampingi rutinitas harian.' },
   ].map(({ icon: Icon, title, text }) => <div className="lp-value" key={title}><span className="lp-icon"><Icon size={22} strokeWidth={1.7} aria-hidden="true" /></span><h3>{title}</h3><p>{text}</p></div>)}</div></section>
 }
 
@@ -153,6 +161,9 @@ const previewTabs: { id: PreviewView; label: string }[] = [
   { id: 'patient', label: 'Dashboard Pasien' },
   { id: 'result', label: 'Hasil Pemeriksaan' },
   { id: 'history', label: 'Riwayat Pemeriksaan' },
+  { id: 'progress', label: 'Perkembangan Kondisi' },
+  { id: 'consultation', label: 'Chat & Panggilan Suara' },
+  { id: 'schedule', label: 'Jadwal Konsultasi' },
   { id: 'provider', label: 'Tenaga Kesehatan' },
 ]
 
@@ -161,7 +172,8 @@ function ProductPreview() {
   function navigateTabs(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     let next = index
     if (event.key === 'ArrowRight') next = (index + 1) % previewTabs.length
-    else if (event.key === 'ArrowLeft') next = (index + previewTabs.length - 1) % previewTabs.length
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (index + previewTabs.length - 1) % previewTabs.length
+    else if (event.key === 'ArrowDown') next = (index + 1) % previewTabs.length
     else if (event.key === 'Home') next = 0
     else if (event.key === 'End') next = previewTabs.length - 1
     else return
@@ -170,13 +182,13 @@ function ProductPreview() {
     document.getElementById(`preview-tab-${previewTabs[next].id}`)?.focus()
   }
   return <section className="lp-product-section lp-container" id="cuplikan" tabIndex={-1} aria-labelledby="preview-title">
-    <div className="lp-product-copy"><span className="lp-eyebrow">TAMPILAN APLIKASI</span><h2 id="preview-title">Lebih dekat dengan<br />DIA SCAN.</h2><p>Dari pemeriksaan pertama hingga riwayat perawatan. Semua tersusun dalam tampilan yang mudah Anda ikuti.</p><div className="lp-preview-tabs" role="tablist" aria-label="Cuplikan aplikasi">{previewTabs.map(({ id, label }, index) => <button key={id} id={`preview-tab-${id}`} role="tab" type="button" aria-selected={view === id} aria-controls="application-preview-panel" tabIndex={view === id ? 0 : -1} onClick={() => setView(id)} onKeyDown={event => navigateTabs(event, index)}><span>{label}</span><ChevronRight size={16} aria-hidden="true" /></button>)}</div></div>
+    <div className="lp-product-copy"><span className="lp-eyebrow">TAMPILAN APLIKASI</span><h2 id="preview-title">Lebih dekat dengan<br />DIA SCAN.</h2><p>Lihat contoh pemeriksaan, perbandingan kondisi, percakapan, dan jadwal. Pilih tampilan untuk mengenali fitur yang Anda butuhkan.</p><div className="lp-preview-tabs" role="tablist" aria-label="Cuplikan aplikasi">{previewTabs.map(({ id, label }, index) => <button key={id} id={`preview-tab-${id}`} role="tab" type="button" aria-selected={view === id} aria-controls="application-preview-panel" tabIndex={view === id ? 0 : -1} onClick={() => setView(id)} onKeyDown={event => navigateTabs(event, index)}><span>{label}</span><ChevronRight size={16} aria-hidden="true" /></button>)}</div></div>
     <div className="lp-product-window" id="application-preview-panel" role="tabpanel" aria-labelledby={`preview-tab-${view}`} tabIndex={0}><ApplicationPreview view={view} /></div>
   </section>
 }
 
 function ProviderSection() {
-  return <section className="lp-provider-section" id="tenaga-kesehatan" tabIndex={-1} aria-labelledby="provider-title"><div className="lp-container lp-provider-inner"><span className="lp-provider-symbol"><Stethoscope size={38} strokeWidth={1.4} aria-hidden="true" /></span><div><span className="lp-eyebrow">UNTUK TENAGA KESEHATAN</span><h2 id="provider-title">Konteks lebih lengkap.<br />Peninjauan lebih terarah.</h2><p>Satukan foto, informasi klinis, dan riwayat pasien untuk membantu proses review dan pencatatan tindak lanjut.</p></div><div className="lp-provider-access"><Link className="button" to="/login" state={{ role: 'provider' }}>Masuk sebagai Tenaga Kesehatan <ArrowRight size={16} aria-hidden="true" /></Link><span><Check size={14} aria-hidden="true" />Akses melalui akun dari administrator institusi.</span></div></div></section>
+  return <section className="lp-provider-section" id="tenaga-kesehatan" tabIndex={-1} aria-labelledby="provider-title"><div className="lp-container lp-provider-inner"><span className="lp-provider-symbol"><Stethoscope size={38} strokeWidth={1.4} aria-hidden="true" /></span><div><span className="lp-eyebrow">UNTUK TENAGA KESEHATAN</span><h2 id="provider-title">Konteks lebih lengkap.<br />Peninjauan lebih terarah.</h2><p>Kelola antrean review, bandingkan pemeriksaan pasien, serta tulis kesimpulan dan rekomendasi. Lanjutkan komunikasi melalui chat, panggilan suara, dan konfirmasi jadwal konsultasi.</p></div><div className="lp-provider-access"><Link className="button" to="/login" state={{ role: 'provider' }}>Masuk sebagai Tenaga Kesehatan <ArrowRight size={16} aria-hidden="true" /></Link><span><Check size={14} aria-hidden="true" />Akses melalui akun dari administrator institusi.</span></div></div></section>
 }
 
 function FinalCTA() {

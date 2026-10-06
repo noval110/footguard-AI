@@ -4,8 +4,9 @@ import { Link } from 'react-router-dom'
 import type { RiskCategory, ReviewStatus } from '../api/types'
 import { reviewLabel, riskLabel } from '../utils/format'
 import { useImageResource, useImageSource } from '../hooks/useImageSource'
+import { BrandMark } from './BrandMark'
 
-export function Logo({ compact = false }: { compact?: boolean }) { return <Link to="/" className="logo" aria-label="DIA SCAN beranda"><span className="logo-mark"><Footprints size={25} strokeWidth={2.3} /></span><span className="logo-text"><strong>DIA SCAN</strong>{!compact && <small>See Today, Healthier Tomorrow</small>}</span></Link> }
+export function Logo({ compact = false }: { compact?: boolean }) { return <Link to="/" className="logo" aria-label="DIA SCAN beranda"><span className="logo-mark"><BrandMark size={35} /></span><span className="logo-text"><strong>DIA SCAN</strong>{!compact && <small>See Today, Healthier Tomorrow</small>}</span></Link> }
 export function ButtonLink({ to, children, secondary = false, className = '' }: { to: string; children: ReactNode; secondary?: boolean; className?: string }) { return <Link to={to} className={`button ${secondary ? 'button-secondary' : ''} ${className}`}>{children}<ArrowRight size={16} /></Link> }
 export function RiskBadge({ value }: { value?: RiskCategory | null }) {
   if (!value) return <span className="badge risk-none"><span className="badge-dot" />Belum dinilai</span>
