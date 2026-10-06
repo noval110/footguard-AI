@@ -36,7 +36,7 @@ export function VisualAnalysis({ detail, results }: VisualAnalysisProps) {
         const detected = item.ulcer_detected === true
         const clear = item.ulcer_detected === false
 
-        const confidenceLabel = Number.isFinite(item.confidence) ? `${(item.confidence * 100).toFixed(1)}%` : 'Belum tersedia'
+        const confidenceLabel = Number.isFinite(item.confidence) ? `${(item.confidence * 100).toFixed(2)}%` : 'Belum tersedia'
         const ulcerAreaPercent =
           item.ulcer_area_percent !== null && item.ulcer_area_percent !== undefined
             ? `${item.ulcer_area_percent.toFixed(2)}%`
@@ -126,23 +126,23 @@ export function VisualAnalysis({ detail, results }: VisualAnalysisProps) {
             {/* Metrics Bar */}
             <div className="fg-metrics-row">
               <div className="fg-metric-box">
-                <span className="fg-metric-box-title">Keyakinan AI</span>
+                <span className="fg-metric-box-title">Keyakinan Klasifikasi</span>
                 <span className="fg-metric-box-value">{confidenceLabel}</span>
                 <span className="fg-metric-box-desc">
-                  Tingkat keyakinan model terhadap temuan visual.
+                  Tingkat keyakinan model dalam mengklasifikasikan foto sebagai Normal atau Wound.
                 </span>
               </div>
 
               <div className="fg-metric-box">
-                <span className="fg-metric-box-title">Area yang Ditandai</span>
+                <span className="fg-metric-box-title">Area Visual Terdeteksi</span>
                 <span className="fg-metric-box-value">{ulcerAreaPercent}</span>
                 <span className="fg-metric-box-desc">
-                  Persentase bidang visual yang terdeteksi AI.
+                  Persentase area gambar yang ditandai oleh model segmentasi.
                 </span>
               </div>
 
               <div className="fg-metric-box">
-                <span className="fg-metric-box-title">Klasifikasi Visual</span>
+                <span className="fg-metric-box-title">Status Analisis</span>
                 <span className="fg-metric-box-value" style={{ fontSize: '1.25rem', color: detected ? '#B45309' : '#047857' }}>
                   {detected ? 'Perlu Perhatian' : clear ? 'Tidak Ada Temuan Visual' : 'Belum Tersedia'}
                 </span>
