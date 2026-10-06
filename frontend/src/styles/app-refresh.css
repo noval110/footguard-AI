@@ -248,6 +248,9 @@ body:has(.fresh-shell, .fg-auth) { min-width: 0; background: #fbf7f8; }
 .fresh-shell .fg-visual-unavailable span { max-width: 230px; font-size: 11px; line-height: 1.7; }
 .fresh-shell .filters { flex-wrap: wrap; gap: 14px; }
 .fresh-shell .filters > label { min-width: 0; }
+/* Keep room for the search icon after the shared input padding is applied. */
+.fresh-shell .filters .search-field > input { width: 100%; min-width: 0; padding-left: 40px; }
+.fresh-shell .filters .search-field > svg { left: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; }
 .fresh-shell table { color: #44566b; }
 .fresh-shell th { background: #faf7f8; color: #8f6c76; font-size: 11px; font-weight: 600; }
 .fresh-shell td { font-size: 12px; border-color: #f0eaec; }
