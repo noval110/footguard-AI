@@ -30,7 +30,7 @@ export function ProgressPage() {
       <ol className="condition-timeline" aria-label="Riwayat risiko dan hasil AI">{entries.map(entry => <li key={entry.examination.id} className="card">
         <div className="consultation-row"><strong>{dateLabel(entry.examination.examined_at)}</strong><span>#{entry.examination.id}</span></div>
         <div className="consultation-row"><span>Risiko <RiskBadge value={entry.risk_category} /></span><ReviewBadge value={entry.review_status} /></div>
-        {entry.ai_results.map(result => <dl className="monitoring-metrics" key={result.id}><div><dt>Klasifikasi AI</dt><dd>{result.finding_type}</dd></div><div><dt>Keyakinan AI</dt><dd>{(result.confidence * 100).toFixed(1)}%</dd></div><div><dt>Area yang ditandai</dt><dd>{result.ulcer_area_percent == null ? 'Belum tersedia' : `${result.ulcer_area_percent.toFixed(2)}%`}</dd></div></dl>)}
+        {entry.ai_results.map(result => <dl className="monitoring-metrics" key={result.id}><div><dt>Klasifikasi AI</dt><dd>{result.finding_type}</dd></div><div><dt>Keyakinan Klasifikasi</dt><dd>{(result.confidence * 100).toFixed(2)}%</dd></div><div><dt>Area Visual Terdeteksi</dt><dd>{result.ulcer_area_percent == null ? 'Belum tersedia' : `${result.ulcer_area_percent.toFixed(2)}%`}</dd></div></dl>)}
         {!entry.ai_results.length && <p className="muted">Hasil AI belum tersedia.</p>}
         <div className="consultation-actions"><Link to={provider ? `/provider/examinations/${entry.examination.id}` : `/patient/result/${entry.examination.id}`}>Lihat pemeriksaan</Link><button className="button button-secondary" onClick={() => setSelected(entry.examination.id)}>Bandingkan dengan sebelumnya</button></div>
       </li>)}</ol>

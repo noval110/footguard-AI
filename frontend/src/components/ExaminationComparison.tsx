@@ -12,8 +12,8 @@ function ComparisonPanel({ detail, label }: { detail: ExaminationDetail; label: 
       const results = detail.ai_results.filter(result => result.foot_image_id === image.id)
       return <section key={image.id}><div className="comparison-image"><ProtectedImage src={image.image_url} alt={`Foto asli kaki, ${label}`} /></div>
         {results.map(result => <div key={result.id}>{result.mask_url && <div className="comparison-image"><ProtectedImage src={result.mask_url} alt={`Area yang ditandai, ${label}`} /></div>}
-          <dl className="monitoring-metrics"><div><dt>Klasifikasi AI</dt><dd>{result.finding_type}</dd></div><div><dt>Keyakinan AI</dt><dd>{(result.confidence * 100).toFixed(1)}%</dd></div>
-          <div><dt>Area yang ditandai</dt><dd>{result.ulcer_area_percent == null ? 'Belum tersedia' : `${result.ulcer_area_percent.toFixed(2)}%`}</dd></div></dl>
+          <dl className="monitoring-metrics"><div><dt>Klasifikasi AI</dt><dd>{result.finding_type}</dd></div><div><dt>Keyakinan Klasifikasi</dt><dd>{(result.confidence * 100).toFixed(2)}%</dd></div>
+          <div><dt>Area Visual Terdeteksi</dt><dd>{result.ulcer_area_percent == null ? 'Belum tersedia' : `${result.ulcer_area_percent.toFixed(2)}%`}</dd></div></dl>
         </div>)}
       </section>
     })}
