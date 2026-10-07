@@ -35,7 +35,7 @@ SEGMENTATION_MODEL_PATH = (
 )
 
 CLASSIFIER_MODEL_PATH = (
-    WEIGHTS_DIR / "normal_wound_classifier.pth"
+    WEIGHTS_DIR / "normal_wound_classifier_v2.pth"
 )
 
 DEVICE = (
@@ -68,7 +68,7 @@ in_features = (
 )
 
 classifier.classifier = nn.Sequential(
-    nn.Dropout(0.3),
+    nn.Dropout(0.35),
     nn.Linear(in_features, 2),
 )
 
