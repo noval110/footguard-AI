@@ -36,7 +36,13 @@ export function VisualAnalysis({ detail, results }: VisualAnalysisProps) {
         const detected = item.ulcer_detected === true
         const clear = item.ulcer_detected === false
 
-        const confidenceLabel = Number.isFinite(item.confidence) ? `${(item.confidence * 100).toFixed(2)}%` : 'Belum tersedia'
+        const confidencePercent = item.confidence * 100
+
+        const confidenceLabel = Number.isFinite(item.confidence)
+          ? confidencePercent >= 99.995
+            ? '>99.99%'
+            : `${confidencePercent.toFixed(2)}%`
+          : 'Belum tersedia'
         const ulcerAreaPercent =
           item.ulcer_area_percent !== null && item.ulcer_area_percent !== undefined
             ? `${item.ulcer_area_percent.toFixed(2)}%`
@@ -129,7 +135,7 @@ export function VisualAnalysis({ detail, results }: VisualAnalysisProps) {
                 <span className="fg-metric-box-title">Keyakinan Klasifikasi</span>
                 <span className="fg-metric-box-value">{confidenceLabel}</span>
                 <span className="fg-metric-box-desc">
-                  Tingkat keyakinan model dalam mengklasifikasikan foto sebagai Normal atau Wound.
+                  Skor keyakinan model dalam memilih kategori Normal atau Wound. Bukan tingkat kepastian diagnosis medis.
                 </span>
               </div>
 
@@ -137,7 +143,7 @@ export function VisualAnalysis({ detail, results }: VisualAnalysisProps) {
                 <span className="fg-metric-box-title">Area Visual Terdeteksi</span>
                 <span className="fg-metric-box-value">{ulcerAreaPercent}</span>
                 <span className="fg-metric-box-desc">
-                  Persentase area gambar yang ditandai oleh model segmentasi.
+                  Persentase piksel foto yang ditandai model segmentasi. Bukan ukuran klinis luas luka.
                 </span>
               </div>
 

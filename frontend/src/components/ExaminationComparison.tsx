@@ -5,6 +5,16 @@ import { ErrorState, LoadingState } from './Feedback'
 import { ProtectedImage, ReviewBadge, RiskBadge } from './UI'
 import { dateLabel } from '../utils/format'
 
+const formatConfidence = (value: number) => {
+  if (!Number.isFinite(value)) return 'Belum tersedia'
+
+  const percent = value * 100
+
+  return percent >= 99.995
+    ? '>99.99%'
+    : `${percent.toFixed(2)}%`
+}
+
 function ComparisonPanel({ detail, label }: { detail: ExaminationDetail; label: string }) {
   const photos = detail.foot_images.filter(image => image.image_type === 'photo')
 
@@ -53,7 +63,7 @@ function ComparisonPanel({ detail, label }: { detail: ExaminationDetail; label: 
                   {results.length > 1 && <p className="comparison-result-label">Hasil AI {resultIndex + 1}</p>}
                   <dl className="monitoring-metrics comparison-metrics">
                     <div><dt>Klasifikasi AI</dt><dd>{result.finding_type || 'Belum tersedia'}</dd></div>
-                    <div><dt>Keyakinan Klasifikasi</dt><dd>{Number.isFinite(result.confidence) ? `${(result.confidence * 100).toFixed(2)}%` : 'Belum tersedia'}</dd></div>
+                    <div><dt>Keyakinan Klasifikasi</dt><dd>{formatConfidence(result.confidence)}</dd></div>
                     <div><dt>Area Visual Terdeteksi</dt><dd>{result.ulcer_area_percent == null ? 'Belum tersedia' : `${result.ulcer_area_percent.toFixed(2)}%`}</dd></div>
                   </dl>
                 </div>
